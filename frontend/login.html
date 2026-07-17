@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="uk">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg" href="img/logo.svg">
+
+    <!-- для старих браузерів -->
+    <link rel="shortcut icon" type="image/x-icon" href="img/logo.svg">
+
+    <!-- для смартфонів Apple (iPhone, iPad) -->
+    <link rel="apple-touch-icon" sizes="180x180" href="img/logo.svg">
+
+    <title>Вхід в панель адміністратора МНЦ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.css" />
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body id="login-body">
+
+    <div class="login-card">
+        <h2 class="login-title">Панель MNC</h2>
+        <form id="login-form">
+            <input type="password" id="password-input" placeholder="Введіть пароль" required
+                autocomplete="current-password">
+            <button type="submit" class="login-btn">Увійти</button>
+        </form>
+        <div id="error-message" class="error-msg">Невірний пароль!</div>
+    </div>
+
+    <script src="js/login.js"></script>
+</body>
+
+</html>

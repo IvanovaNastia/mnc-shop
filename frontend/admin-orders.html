@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg" href="img/logo.svg">
+
+    <!-- для старих браузерів -->
+    <link rel="shortcut icon" type="image/x-icon" href="img/logo.svg">
+
+    <!-- для смартфонів Apple (iPhone, iPad) -->
+    <link rel="apple-touch-icon" sizes="180x180" href="img/logo.svg">
+
+    <title>МНЦ Адмінка - закази</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.css" />
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <main id="body-grow">
+        <div class="container">
+            <div class="admin-title-block">
+                <h1>Панель адміністратора магазину МНЦ</h1>
+                <div class="admin-tabs">
+                    <a href="admin.html" class="tab-btn">Товари</a>
+                    <a href="admin-orders.html" class="tab-btn active-tab">Замовлення</a>
+                </div>
+                <button class="btn-log-out" onclick="logout()">Вийти з кабінету</button>
+            </div>
+
+            <!-- Таблица Заказов -->
+            <div class="admin-table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID Замовлення</th>
+                            <th>Ім'я клієнта</th>
+                            <th>Телефон</th>
+                            <th>Email</th>
+                            <th>Замовлені товари</th>
+                            <th>Фінальна ціна</th>
+                            <th>Статус</th>
+                            <th>Дата створення</th>
+                            <th>Дії</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-orders-list">
+                        <!-- Сюда JS будет рендерить заказы -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/admin-orders.js"></script>
+</body>
+
+</html>

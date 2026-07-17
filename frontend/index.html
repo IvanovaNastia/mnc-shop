@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg" href="img/logo.svg">
+
+    <!-- для старих браузерів -->
+    <link rel="shortcut icon" type="image/x-icon" href="img/logo.svg">
+
+    <!-- для смартфонів Apple (iPhone, iPad) -->
+    <link rel="apple-touch-icon" sizes="180x180" href="img/logo.svg">
+
+    <title>МНЦ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.css" />
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <section id="top">
+        <div class="container top-container">
+            <div class="top-block">
+                <div class="top-block-elem">
+                    <img src="img/mini-pin/locate.svg" alt="Позначка місцезнаходження">
+                    <div>вул. Центральна, 10 (район Старої площі)</div>
+                </div>
+                <div class="top-block-elem">
+                    <img src="img/mini-pin/clock.svg" alt="Годинник">
+                    <div>Щодня 09:00-19:00</div>
+                </div>
+            </div>
+            <div class="top-block">
+                <div class="top-block-elem">
+                    <img src="img/soc_media/instagram.svg" alt="Інстаграм">
+                    <img src="img/soc_media/tiktok.svg" alt="Тікток">
+                    <img src="img/soc_media/facebook.svg" alt="Фейсбук">
+                </div>
+                <div class="top-block-elem">alisaivanova0205@ukr.net</div>
+            </div>
+        </div>
+    </section>
+
+    <header id="header">
+        <div class="container header-container">
+            <div class="header-top">
+                <div class="header-logo-block">
+                    <a href="index.html"><img src="img/logo.svg" alt="Логотип" class="header-logo"></a>
+                    <div class="header-text">
+                        <h1 class="header-title">МАРКЕТ НИЗЬКИХ ЦІН</h1>
+                        <div class="header-subtitle">Все для дому, родини та щоденого комфорту!</div>
+                    </div>
+                </div>
+
+                <div class="header-locate">
+                    <div class="header-search-container" style="position: relative; flex-grow: 1;">
+                        <form action="special.html" method="GET" class="header-search-box search-form"
+                            autocomplete="off">
+                            <input type="text" id="header-search-input" name="search" placeholder="Пошук товарів..."
+                                required class="header-search-input">
+                            <button type="submit" class="search-btn">
+                                <img src="img/header/search.svg" alt="Знайти" class="header-search-icon">
+                            </button>
+                        </form>
+                        <!-- Блок для выпадающего меню вероятных запросов -->
+                        <div class="search-suggestions" id="search-suggestions"></div>
+                    </div>
+                    <div class="header-action">
+                        <button>
+                            <a href="favourite.html">
+                                <img src="img/header/heart.svg" alt="Обране" class="header-search-icon">
+                                <span class="header-counter" id="fav-counter-badge">0</span>
+                            </a>
+                        </button>
+                        <button>
+                            <a href="shop_cart.html">
+                                <img src="img/header/cart.svg" alt="Корзина" class="header-search-icon">
+                                <span class="header-counter" id="cart-counter-badge">0</span>
+                            </a>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="header-botton">
+                <div class="header-menu">
+                    <button class="header-catalog-btn">
+                        <img src="img/menu/catalog.svg" alt="Каталог">
+                        <div>Каталог</div>
+                    </button>
+                    <button class="header-menu-btn">
+                        <a href="index.html">
+                            <img src="img/menu/home.svg" alt="Головна">
+                            <div>Головна</div>
+                        </a>
+                    </button>
+                    <button class="header-menu-btn mobile-only header-offers-btn">
+                        <img src="img/menu/gift.svg" alt="Спеціальні пропозиції">
+                        <div>Пропозиції</div>
+                    </button>
+                    <button class="header-menu-btn desktop-only">
+                        <a href="special.html?type=new">
+                            <img src="img/menu/newer.svg" alt="Новинки">
+                            <div>Новинки</div>
+                        </a>
+                    </button>
+                    <button class="header-menu-btn desktop-only">
+                        <a href="special.html?type=sale">
+                            <img src="img/menu/discount.svg" alt="Акції">
+                            <div>Акції</div>
+                        </a>
+                    </button>
+                    <button class="header-menu-btn desktop-only">
+                        <a href="special.html?type=popular">
+                            <img src="img/menu/star.svg" alt="Популярне">
+                            <div>Популярне</div>
+                        </a>
+                    </button>
+                    <button class="header-menu-btn">
+                        <a href="info.html">
+                            <img src="img/menu/about.svg" alt="Інформація">
+                            <div>Про магазин</div>
+                        </a>
+                    </button>
+                </div>
+
+                <div class="catalog-menu">
+                    <ul class="catalog-list">
+                        <li><a href="special.html?type=all">Всі товари</a></li>
+                        <li><a href="special.html?category=Побутова хімія">Побутова хімія</a></li>
+                        <li><a href="special.html?category=Текстиль">Текстиль</a></li>
+                        <li><a href="special.html?category=Кухонні дрібниці">Кухонні дрібниці</a></li>
+                        <li><a href="special.html?category=Посуд">Посуд</a></li>
+                        <li><a href="special.html?category=Іграшка">Іграшка</a></li>
+                        <li><a href="special.html?category=Канцелярія">Канцелярія</a></li>
+                        <li><a href="special.html?category=Господарчі товари">Господарчі товари</a></li>
+                    </ul>
+                </div>
+
+                <div class="offers-menu">
+                    <ul class="offers-list">
+                        <li><a href="special.html?type=new">Новинки</a></li>
+                        <li><a href="special.html?type=sale">Акції</a></li>
+                        <li><a href="special.html?type=popular">Популярні товари</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main id="main-content">
+        <section id="banner">
+            <div class="container banner-container">
+                <div class="swiper">
+                    <div class="swiper-wrapper">
+                        <div class="swiper-slide">
+                            <img src="img/banner/swiper-img1.jpg" alt="">
+                        </div>
+                        <div class="swiper-slide">
+                            <img src="img/banner/swiper-img2.jpg" alt="">
+                        </div>
+                        <div class="swiper-slide">
+                            <img src="img/banner/swiper-img3.jpg" alt="">
+                        </div>
+                    </div>
+
+                    <div class="swiper-pagination"></div>
+
+                    <div class="swiper-button-prev">
+                        <img src="img/banner/swiper_btn/GroupL.svg" alt="">
+                    </div>
+                    <div class="swiper-button-next">
+                        <img src="img/banner/swiper_btn/GroupR.svg" alt="">
+                    </div>
+                </div>
+                <a href="special.html?type=all" class="banner-action">
+                    <div>Перейти до каталогу</div>
+                    <img src="img/mini-pin/arrow-right-white.svg" alt="">
+                </a>
+            </div>
+        </section>
+
+        <section id="show-catalog">
+            <div class="container show-catalog-container">
+                <a href="special.html?category=Побутова хімія" class="show-catalog-grid-btn">
+                    <img src="img/catalog/chimija.png" alt="">
+                    <div>Побутова хімія</div>
+                </a>
+                <a href="special.html?category=Текстиль" class="show-catalog-grid-btn">
+                    <img src="img/catalog/tekstil.png" alt="">
+                    <div>Текстиль</div>
+                </a>
+                <a href="special.html?category=Кухонні дрібниці" class="show-catalog-grid-btn">
+                    <img src="img/catalog/kuchoni_dribnuci.png" alt="">
+                    <div>Кухонні дрібниці</div>
+                </a>
+                <a href="special.html?category=Посуд" class="show-catalog-grid-btn">
+                    <img src="img/catalog/pocud.png" alt="">
+                    <div>Посуд</div>
+                </a>
+                <a href="special.html?category=Іграшка" class="show-catalog-grid-btn">
+                    <img src="img/catalog/toys.png" alt="">
+                    <div>Іграшки</div>
+                </a>
+                <a href="special.html?category=Канцелярія" class="show-catalog-grid-btn">
+                    <img src="img/catalog/kanceliarija.png" alt="">
+                    <div>Канцелярія</div>
+                </a>
+                <a href="special.html?category=Господарчі товари" class="show-catalog-grid-btn">
+                    <img src="img/catalog/gospodarchi_tovari.png" alt="">
+                    <div>Господарчі товари</div>
+                </a>
+                <a href="special.html?type=all" class="show-catalog-grid-btn">
+                    <img src="img/catalog/three_points.png" alt="">
+                    <div>Переглянути всі категорії</div>
+                </a>
+            </div>
+        </section>
+
+        <section id="features">
+            <div class="container features-container">
+                <div class="features-item">
+                    <img src="img/features/prise.svg" alt="" class="features-item-img">
+                    <div class="features-item-text">
+                        <h3 class="features-item-title">Низькі ціни щодня</h3>
+                        <div class="features-item-desc">Вигідні пропозиції для всієї родини</div>
+                    </div>
+                </div>
+                <div class="features-item">
+                    <img src="img/features/dostavka.svg" alt="" class="features-item-img">
+                    <div class="features-item-text">
+                        <h3 class="features-item-title">Постійні нові надходження</h3>
+                        <div class="features-item-desc">Свіжї товари кожен тиждень</div>
+                    </div>
+                </div>
+                <div class="features-item">
+                    <img src="img/features/jakist.svg" alt="" class="features-item-img">
+                    <div class="features-item-text">
+                        <h3 class="features-item-title">Якість та перевірені бренди</h3>
+                        <div class="features-item-desc">Тільки те, що обираємо для себе</div>
+                    </div>
+                </div>
+                <div class="features-item">
+                    <img src="img/features/privitne.svg" alt="" class="features-item-img">
+                    <div class="features-item-text">
+                        <h3 class="features-item-title">Привітне обслуговування</h3>
+                        <div class="features-item-desc">Ми завжди раді допомогти</div>
+                    </div>
+                </div>
+                <div class="features-item">
+                    <img src="img/features/like.svg" alt="" class="features-item-img">
+                    <div class="features-item-text">
+                        <h3 class="features-item-title">Доступні ціни щодня</h3>
+                        <div class="features-item-desc">Економте разом з нами</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="new">
+            <div class="container new-container">
+                <div class="new-text">
+                    <h2 class="new-title">Новинки</h2>
+                    <a href="special.html?type=new" class="new-more">
+                        <div>Дивитися більше</div>
+                        <img src="img/mini-pin/arrow-right-red.svg" alt="">
+                    </a>
+                </div>
+                <div id="new-products-grid" class="new-grid"></div>
+            </div>
+        </section>
+
+        <section id="sale">
+            <div class="container sale-container">
+                <div class="sale-text">
+                    <h2 class="sale-title">Акції</h2>
+                    <a href="special.html?type=sale" class="sale-more">
+                        <div>Дивитися більше</div>
+                        <img src="img/mini-pin/arrow-right-red.svg" alt="">
+                    </a>
+                </div>
+                <div id="sale-products-grid" class="sale-grid"></div>
+            </div>
+        </section>
+
+        <section id="popular">
+            <div class="container popular-container">
+                <div class="popular-text">
+                    <h2 class="popular-title">Популярне</h2>
+                    <a href="special.html?type=popular" class="popular-more">
+                        <div>Популярні товари</div>
+                        <img src="img/mini-pin/arrow-right-red.svg" alt="">
+                    </a>
+                </div>
+                <div id="popular-products-grid" class="popular-grid"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer id="footer">
+        <div class="container footer-container">
+            <div class="footer-brand-block">
+                <div class="footer-logo-wrapper">
+                    <img src="img/logo.svg" alt="" class="footer-logo-img">
+                    <h2 class="footer-logo-title">МАРКЕТ НИЗЬКИХ ЦІН</h2>
+                </div>
+                <div class="footer-brand-desc">
+                    Все для дому, родини та щоденого комфорту за доступними цінаи!
+                </div>
+            </div>
+            <div class="footer-nav-block">
+                <h3 class="footer-nav-title">Переваги магазину</h3>
+                <ul class="footer-nav-list">
+                    <li>
+                        <img src="img/mini-pin/check-mark.svg" alt="">
+                        <div>Великий вибір товарів</div>
+                    </li>
+                    <li>
+                        <img src="img/mini-pin/check-mark.svg" alt="">
+                        <div>Постійні нові надходження</div>
+                    </li>
+                    <li>
+                        <img src="img/mini-pin/check-mark.svg" alt="">
+                        <div>Доступні ціни щодня</div>
+                    </li>
+                    <li>
+                        <img src="img/mini-pin/check-mark.svg" alt="">
+                        <div>Привітне обслуговування</div>
+                    </li>
+                </ul>
+            </div>
+            <div class="footer-nav-block nav-block2">
+                <h3 class="footer-nav-title">Покупцям</h3>
+                <ul class="footer-nav-list">
+                    <li><a href="info.html#pay">Оплата та доставка</a></li>
+                    <li><a href="info.html#return">Обмін та повернення</a></li>
+                    <li><a href="info.html#question">Часті запитання (FAQ)</a></li>
+                    <li><a href="info.html#contacts">Контакти</a></li>
+                </ul>
+            </div>
+            <div class="footer-nav-block">
+                <h3 class="footer-nav-title">Контакти магазину</h3>
+                <ul class="footer-nav-list">
+                    <li>
+                        <img src="img/mini-pin/locate.svg" alt="">
+                        <div>вул. Центральна, 10 (район Старої площі)</div>
+                    </li>
+                    <li>
+                        <img src="img/mini-pin/mail.svg" alt="">
+                        <div>alisaivanova0205@ukr.net</div>
+                    </li>
+                    <li>
+                        <img src="img/mini-pin/clock.svg" alt="">
+                        <div>Щодня 09:00-19:00</div>
+                    </li>
+                </ul>
+            </div>
+            <div class="footer-soc-block">
+                <h3 class="footer-soc-title">Ми в соцмережах</h3>
+                <div class="footer-soc-icon">
+                    <a href="https://www.instagram.com/mnc_pokrov?igsh=bTFyNWR4c3MwcXBx&utm_source=qr" target="_blank"
+                        rel="noopener noreferrer"><img src="img/soc_media/instagram.svg" alt=""></a>
+                    <a href="https://www.tiktok.com/@mnc_pokrov" target="_blank" rel="noopener noreferrer"><img
+                            src="img/soc_media/tiktok.svg" alt=""></a>
+                    <a href="https://www.facebook.com/share/1AGCzApT2h/?mibextid=wwXIfr" target="_blank"
+                        rel="noopener noreferrer"><img src="img/soc_media/facebook.svg" alt=""></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <section id="bottom">
+        <div class="container bottom-container">
+            <div class="bottom-fop">ФОП Александрова Аліса Олегівна, ІПН 3335907148</div>
+            <div class="bottom-link"><a href="polity.html">Політика конфіденційності</a> | <a href="terms.html">Умови
+                    використання сайту</a>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.js"></script>
+    <script src="js/swiper.js"></script>
+    <script src="js/droped-menu.js"></script>
+    <script src="js/catalog.js"></script>
+    <script src="js/store-core.js"></script>
+    <script src="js/spa-router.js"></script>
+</body>
+
+</html>

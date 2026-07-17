@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg" href="img/logo.svg">
+
+    <!-- для старих браузерів -->
+    <link rel="shortcut icon" type="image/x-icon" href="img/logo.svg">
+
+    <!-- для смартфонів Apple (iPhone, iPad) -->
+    <link rel="apple-touch-icon" sizes="180x180" href="img/logo.svg">
+
+    <title>МНЦ Адмінка - товари</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.css" />
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body style="display: none;">
+    <main id="body-grow">
+        <div class="container">
+            <div class="admin-title-block">
+                <h1>Панель адміністратора магазину МНЦ</h1>
+                <div class="admin-tabs">
+                    <a href="admin.html" class="tab-btn active-tab">Товари</a>
+                    <a href="admin-orders.html" class="tab-btn">Замовлення</a>
+                </div>
+                <button class="btn-add-product" id="openAddModalBtn">＋ Додати новий товар</button>
+                <button class="btn-log-out" onclick="logout()">Вийти з кабінету</button>
+            </div>
+
+            <div class="admin-table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Фото</th>
+                            <th>Назва</th>
+                            <th>Ціна</th>
+                            <th>Знижка</th>
+                            <th>Ціна зі знажкой</th>
+                            <th>Нове</th>
+                            <th>Популярне</th>
+                            <th>Категорії</th>
+                            <th>Опис</th>
+                            <th>Характеристика</th>
+                            <th>Дії</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-products-list">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Модальне вікно для додавання товару -->
+    <div id="addProductModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" id="closeModalBtn">&times;</span>
+            <h2 id="modalTitle">Додати новий товар</h2>
+            <form id="addProductForm">
+                <input type="hidden" id="form-product-id" value="">
+                <div class="form-grid">
+
+                    <!-- ЛЕВАЯ КОЛОНКА: Основное -->
+                    <div class="form-column">
+                        <div class="form-group">
+                            <label>Назва товару:</label>
+                            <input type="text" id="form-title" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Ціна (грн):</label>
+                            <input type="number" id="form-price" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Знижка (%):</label>
+                            <input type="number" id="form-discount" min="0" max="100" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Фото товару:</label>
+                            <input type="hidden" id="form-product-id" value="">
+                            <!-- Скрытое поле оставим на случай, если при редактировании картинка не меняется -->
+                            <input type="hidden" id="form-img-old-path" value="">
+                            <!-- Принимаем только изображения -->
+                            <input type="file" id="form-img-file" accept="image/*" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Опис:</label>
+                            <textarea id="form-description" rows="4"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- ПРАВАЯ КОЛОНКА: Категории, Особисте, Характеристики -->
+                    <div class="form-column">
+                        <!-- Категории чекбоксами -->
+                        <div class="form-group">
+                            <label>Категорії:</label>
+                            <div class="categories-checkbox-group">
+                                <label class="category-row-item"><input type="checkbox" name="categories"
+                                        value="Побутова хімія"> Побутова хімія</label>
+                                <label class="category-row-item"><input type="checkbox" name="categories"
+                                        value="Текстиль"> Текстиль</label>
+                                <label class="category-row-item"><input type="checkbox" name="categories"
+                                        value="Кухонні дрібниці"> Кухонні дрібниці</label>
+                                <label class="category-row-item"><input type="checkbox" name="categories" value="Посуд">
+                                    Посуд</label>
+                                <label class="category-row-item"><input type="checkbox" name="categories"
+                                        value="Іграшка"> Іграшка</label>
+                                <label class="category-row-item"><input type="checkbox" name="categories"
+                                        value="Канцелярія"> Канцелярія</label>
+                                <label class="category-row-item"><input type="checkbox" name="categories"
+                                        value="Господарчі товари"> Господарчі товари</label>
+                            </div>
+                        </div>
+
+                        <!-- Блок "Особисте" -->
+                        <h3 class="order-special">
+                            Особисте</h3>
+                        <div class="form-group form-group-special">
+                            <label class="category-row-item"><input type="checkbox" id="form-isNew"> Новинка</label>
+                            <label class="category-row-item"><input type="checkbox" id="form-isPopular">
+                                Популярний</label>
+                        </div>
+
+                        <!-- Характеристики с нуля -->
+                        <h3 class="order-descr">Характеристики</h3>
+                        <div id="specs-container">
+                            <!-- Сюда скрипт будет добавлять строки -->
+                        </div>
+                        <button type="button" id="btn-add-spec-row">
+                            ＋ Додати характеристику
+                        </button>
+                    </div>
+
+                </div>
+
+                <button type="submit" class="btn-add-product">Зберегти товар</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/admin.js"></script>
+</body>
+
+</html>

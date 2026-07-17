@@ -1,0 +1,105 @@
+[
+  {
+    "id": 1,
+    "title": "aaaccc",
+    "price": 100.00,
+    "discount": 0,
+    "img": "img/products/aaa.png",
+    "category": ["Побутова хімія", "Посуд", "Господарчі товари"],
+    "isNew": true,
+    "isPopular": true,
+    "description": "aaa.",
+    "specs": {
+      "Aaa": "aaa",
+      "Об'єм": "500 мл",
+      "Країна виробник": "Україна",
+      "Склад": "Органічні ПАР, вода, ароматизатор"
+    }
+  },
+  {
+    "id": 2,
+    "title": "bbb",
+    "price": 96.00,
+    "discount": 10,
+    "img": "img/products/bbb.png",
+    "category": [ "Побутова хімія", "Текстиль", "Іграшка"],
+    "isNew": true,
+    "isPopular": false,
+    "description": "bbb.",
+    "specs": {
+      "Bbb": "bbb",
+      "Об'єм": "500 мл",
+      "Країна виробник": "Україна",
+      "Склад": "Органічні ПАР, вода, ароматизатор"
+    }
+  },
+  {
+    "id": 3,
+    "title": "ccc",
+    "price": 256.00,
+    "discount": 15,
+    "img": "img/products/ccc.png",
+    "category": ["Текстиль", "Канцелярія", "Посуд"
+    ],
+    "isNew": true,
+    "isPopular": false,
+    "description": "ccc.",
+    "specs": {
+      "Ccc": "ccc",
+      "Об'єм": "500 мл",
+      "Країна виробник": "Україна",
+      "Склад": "Органічні ПАР, вода, ароматизатор"
+    }
+  },
+  {
+    "id": 4,
+    "title": "ddd",
+    "price": 51.00,
+    "discount": 0,
+    "img": "img/products/ddd.png",
+    "category": ["Кухонні дрібниці"],
+    "isNew": true,
+    "isPopular": false,
+    "description": "ddd.",
+    "specs": {
+      "Ddd": "ddd",
+      "Об'єм": "500 мл",
+      "Країна виробник": "Україна",
+      "Склад": "Органічні ПАР, вода, ароматизатор"
+    }
+  },
+  {
+    "id": 5,
+    "title": "eee",
+    "price": 80.00,
+    "discount": 0,
+    "img": "img/products/eee.png",
+    "category": ["Кухонні дрібниці", "Господарчі товари"],
+    "isNew": true,
+    "isPopular": false,
+    "description": "eee.",
+    "specs": {
+      "Eee": "eee",
+      "Об'єм": "500 мл",
+      "Країна виробник": "Україна",
+      "Склад": "Органічні ПАР, вода, ароматизатор"
+    }
+  },
+  {
+    "id": 6,
+    "title": "eeefff",
+    "price": 80.00,
+    "discount": 0,
+    "img": "img/products/eee.png",
+    "category": ["Кухонні дрібниці", "Господарчі товари"],
+    "isNew": true,
+    "isPopular": false,
+    "description": "eee.",
+    "specs": {
+      "Eee": "eee",
+      "Об'єм": "500 мл",
+      "Країна виробник": "Україна",
+      "Склад": "Органічні ПАР, вода, ароматизатор"
+    }
+  }
+]
