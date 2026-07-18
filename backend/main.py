@@ -416,7 +416,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 async def upload_image(file: UploadFile = File(...), admin_password: str = Depends(verify_admin_password)):
     """Эндпоинт для сохранения картинки, автоматической конвертации в WebP и оптимизации веса"""
     # Проверяем, что это точно картинка
-    if not file.contSent_type.startswith("image/"):
+    if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Файл повинен бути зображенням")
     
     try:
