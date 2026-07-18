@@ -408,7 +408,7 @@ def update_product(product_id: int, product: ProductCreate, admin_password: str 
     return {"message": f"Товар з ID {product_id} успішно оновлено"}
 
 # Укажи правильный путь к папке с картинками твоего фронтенда
-UPLOAD_DIR = os.path.join("frontend", "img", "products")
+UPLOAD_DIR = os.path.join("..", "frontend", "img", "products")
 # Создаем папку, если её вдруг нет
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
