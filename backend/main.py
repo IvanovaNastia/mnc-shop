@@ -6,6 +6,8 @@ from datetime import datetime
 import urllib.request
 import urllib.parse
 from typing import List, Dict, Optional
+from io import BytesIO
+from PIL import Image
 
 # fastapi импорты
 from fastapi import FastAPI, HTTPException, Depends, File, UploadFile, Header
@@ -406,26 +408,39 @@ def update_product(product_id: int, product: ProductCreate, admin_password: str 
     return {"message": f"Товар з ID {product_id} успішно оновлено"}
 
 # Укажи правильный путь к папке с картинками твоего фронтенда
-UPLOAD_DIR = r"C:\Users\ivano\All\MNC\frontend\img\products"
+UPLOAD_DIR = os.path.join("frontend", "img", "products")
 # Создаем папку, если её вдруг нет
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @app.post("/api/upload")
 async def upload_image(file: UploadFile = File(...), admin_password: str = Depends(verify_admin_password)):
-    """Эндпоинт для сохранения картинки на сервер"""
+    """Эндпоинт для сохранения картинки, автоматической конвертации в WebP и оптимизации веса"""
     # Проверяем, что это точно картинка
-    if not file.content_type.startswith("image/"):
+    if not file.contSent_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Файл повинен бути зображенням")
     
-    # Формируем безопасный путь для сохранения
-    file_path = os.path.join(UPLOAD_DIR, file.filename)
-    
     try:
-        # Сохраняем файл на диск
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-        # Возвращаем относительный путь, который запишем в БД
-        return {"img_url": f"img/products/{file.filename}"}
+        # 1. Читаем картинку из запроса в оперативную память
+        image_bytes = await file.read()
+        image = Image.open(BytesIO(image_bytes))
+        
+        # 2. Обрабатываем прозрачность (альфа-каналы)
+        if image.mode in ("RGBA", "P"):
+            image = image.convert("RGBA")
+        else:
+            image = image.convert("RGB")
+            
+        # 3. Меняем оригинальное расширение на .webp
+        clean_name = os.path.splitext(file.filename)[0]
+        webp_filename = f"{clean_name}.webp"
+        file_path = os.path.join(UPLOAD_DIR, webp_filename)
+        
+        # 4. Сохраняем с качеством 80% (визуально разницы нет, но вес файла крошечный)
+        image.save(file_path, "WEBP", quality=80)
+        
+        # Возвращаем путь, который админка подставит в карточку товара
+        return {"img_url": f"img/products/{webp_filename}"}
+        
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Не вдалося зберегти файл: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Не вдалося обробити та зберегти зображення: {str(e)}")
 
