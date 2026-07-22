@@ -1,3 +1,11 @@
+// 1. Проверяем, реагирует ли роутер ХОТЯ БЫ НА ЧТО-ТО при клике
+document.addEventListener('click', (e) => {
+    const link = e.target.closest('a');
+    if (link) {
+        console.log("🔥 КЛИК ПО ССЫЛКЕ:", link.getAttribute('href'), "Полный URL:", link.href);
+    }
+}, true); // UseCapture: перехватываем клик ДО того, как его кто-то заблокирует
+
 document.addEventListener('click', async (e) => {
     const link = e.target.closest('a');
     
