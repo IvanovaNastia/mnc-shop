@@ -1,32 +1,40 @@
-function initSwiper() {
-  if (!document.querySelector('.swiper')) return;
+const swiper = new Swiper('.swiper', {
+  // Optional parameters
+  direction: 'horizontal',
+  loop: true,
 
-  // Если слайдер уже инициализирован, уничтожаем старый экземпляр перед новым созданием
-  if (window.mySwiperInstance) {
-    window.mySwiperInstance.destroy(true, true);
-  }
+  autoplay: {
+   delay: 2500,
+  },
 
-  window.mySwiperInstance = new Swiper('.swiper', {
-    direction: 'horizontal',
-    loop: true,
-    autoplay: { delay: 2500 },
-    speed: 1000,
-    breakpoints: {
-      500: { slidesPerView: 1, slidesPerGroup: 1 },
-      700: { slidesPerView: 2, slidesPerGroup: 1 },
-    },
-    spaceBetween: 10,
-    pagination: {
-      el: '.swiper-pagination',
-      type: 'bullets',
-      clickable: true,
-    },
-    navigation: {
-      nextEl: '.swiper-button-next',
-      prevEl: '.swiper-button-prev',
-    },
-  });
-}
+  speed: 1000,
 
-window.initSwiper = initSwiper;
-document.addEventListener('DOMContentLoaded', initSwiper);
+  breakpoints: {
+    500: {
+      slidesPerView: 1,
+      // spaceBetween: 20,
+      slidesPerGroup: 1
+    },
+    700: {
+      slidesPerView: 2,
+      // spaceBetween: 30,
+      slidesPerGroup: 1
+    },
+  },
+
+  // slidesPerView: 2,
+  spaceBetween: 10,
+
+  // If we need pagination
+  pagination: {
+    el: '.swiper-pagination',
+    type: 'bullets', // Этот параметр меняет полоску на точки
+    clickable: true, // Позволяет кликать по точкам для смены слайдов
+  },
+
+  // Navigation arrows
+  navigation: {
+    nextEl: '.swiper-button-next',
+    prevEl: '.swiper-button-prev',
+  },
+});
