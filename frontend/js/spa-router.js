@@ -9,8 +9,7 @@ document.addEventListener('click', async (e) => {
         !link.getAttribute('href').startsWith('#')
     ) {
         e.preventDefault();
-        const url = link.href;
-        await navigateTo(url);
+        await navigateTo(link.href);
     }
 });
 
@@ -21,9 +20,10 @@ async function navigateTo(url) {
         return;
     }
 
-    // Фиксируем высоту для защиты от скачков
+    // Закрываем выпадающие меню шапки при переходе
+    document.querySelectorAll('.catalog-menu, .offers-menu').forEach(m => m.classList.remove('_active'));
+
     const currentHeight = contentArea.offsetHeight;
-    // Временно жестко задаем эту высоту, чтобы страница не сжималась
     contentArea.style.minHeight = `${currentHeight}px`;
 
     try {
@@ -39,7 +39,7 @@ async function navigateTo(url) {
             throw new Error('На цільовій сторінці не знайдено #main-content');
         }
 
-        // 1. Сначала обновляем URL в браузере, чтобы window.location.search соответствовал новому URL!
+        // 1. Обновляем URL в браузере ДО вызова функций отрисовки
         history.pushState(null, '', url);
         document.title = newDoc.title;
         window.scrollTo(0, 0);
@@ -47,10 +47,7 @@ async function navigateTo(url) {
         // 2. Вставляем новый контент
         contentArea.innerHTML = newContent.innerHTML;
 
-        // 3. Выполняем скрипты с новой страницы (если они там есть)
-        executeScriptsFromNewPage(newDoc);
-
-        // 4. Переинициализируем все JS-модули
+        // 3. Выполняем скрипты и переинициализацию
         reinitializePageScripts();
 
     } catch (error) {
@@ -67,22 +64,12 @@ async function navigateTo(url) {
     }
 }
 
-window.addEventListener('popstate', async () => {
-    // При навигации назад/вперед вручную вызываем инициализацию
+// Делаем функцию доступной глобально
+window.spaNavigate = navigateTo;
+
+window.addEventListener('popstate', () => {
     reinitializePageScripts();
 });
-
-// Функция для выполнения скриптов, которые были на подгруженной странице
-function executeScriptsFromNewPage(newDoc) {
-    const scripts = newDoc.querySelectorAll('script');
-    scripts.forEach(oldScript => {
-        const newScript = document.createElement('script');
-        Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
-        newScript.appendChild(document.createTextNode(oldScript.innerHTML));
-        document.body.appendChild(newScript);
-        newScript.remove();
-    });
-}
 
 function reinitializePageScripts() {
     // Обновляем счетчики в шапке
@@ -114,5 +101,15 @@ function reinitializePageScripts() {
         if (typeof window.renderFavPage === 'function') {
             window.renderFavPage();
         }
+    }
+
+    // Переинициализация Аккордеона
+    if (typeof window.initAccordions === 'function') {
+        window.initAccordions();
+    }
+
+    // Переинициализация Слайдера
+    if (typeof window.initSwiper === 'function') {
+        window.initSwiper();
     }
 }

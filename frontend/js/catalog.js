@@ -168,7 +168,12 @@ function renderProductGrid(productsList, container, currentType) {
 }
 
 function goToProduct(id) {
-    window.location.href = `product.html?id=${id}`;
+    const url = `product.html?id=${id}`;
+    if (typeof window.spaNavigate === 'function') {
+        window.spaNavigate(url);
+    } else {
+        window.location.href = url;
+    }
 }
 
 // Функция отрисовки карточки для главной страницы (index.html)
