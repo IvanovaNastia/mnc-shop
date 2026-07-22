@@ -39,15 +39,15 @@ async function navigateTo(url) {
             throw new Error('На цільовій сторінці не знайдено #main-content');
         }
 
-        // 1. Вставляем новый HTML
+        // 1. Обновляем контент
         contentArea.innerHTML = newContent.innerHTML;
         
-        // 2. Обновляем адресную строку и заголовок
+        // 2. Обновляем URL и Title
         history.pushState(null, '', url);
         document.title = newDoc.title;
         window.scrollTo(0, 0);
 
-        // 3. Выполняем Inline-скрипты и подгружаем недостающие <script> с новой страницы
+        // 3. Выполняем скрипты
         executeScriptsFromNewPage(newDoc);
 
         // 4. Запускаем инициализацию логики каталога и корзины
@@ -79,27 +79,30 @@ function executeScriptsFromNewPage(newDoc) {
         Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
         newScript.appendChild(document.createTextNode(oldScript.innerHTML));
         document.body.appendChild(newScript);
-        newScript.remove(); // Удаляем тег из DOM после выполнения
+        newScript.remove();
     });
 }
 
 function reinitializePageScripts() {
-    // Явно вызываем рендер каталога / товаров на главной
-    if (typeof window.initCatalogPage === 'function') {
+    // 1. Отрисовка каталога / главной
+    if (typeof initCatalogPage === 'function') {
+        initCatalogPage();
+    } else if (typeof window.initCatalogPage === 'function') {
         window.initCatalogPage();
     }
     
-    // Вызываем функции для работы с корзиной и отдельными товарами (если они загружены)
-    if (typeof updateHeaderCounters === 'function') {
-        updateHeaderCounters();
+    // 2. Счетчики и страницы корзины/избранного/товара
+    if (typeof updateHeaderCounters === 'function') updateHeaderCounters();
+    
+    if (window.location.pathname.includes('product.html')) {
+        if (typeof renderSingleProductPage === 'function') renderSingleProductPage();
     }
-    if (window.location.pathname.includes('product.html') && typeof window.renderSingleProductPage === 'function') {
-        window.renderSingleProductPage();
+    
+    if (document.querySelector('.cart-menu') || document.getElementById('shop_cart')) {
+        if (typeof renderCartPage === 'function') renderCartPage();
     }
-    if ((document.querySelector('.cart-menu') || document.getElementById('shop_cart')) && typeof window.renderCartPage === 'function') {
-        window.renderCartPage();
-    }
-    if ((document.querySelector('.fav-menu') || document.getElementById('favourite')) && typeof window.renderFavPage === 'function') {
-        window.renderFavPage();
+    
+    if (document.querySelector('.fav-menu') || document.getElementById('favourite')) {
+        if (typeof renderFavPage === 'function') renderFavPage();
     }
 }

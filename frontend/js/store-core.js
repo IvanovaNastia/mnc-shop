@@ -419,3 +419,9 @@ document.addEventListener('submit', function (e) {
         return false;
     }
 });
+
+// Привязываем функции к window, чтобы SPA-роутер мог вызывать их при смене страниц
+window.updateHeaderCounters = updateHeaderCounters;
+window.renderSingleProductPage = renderSingleProductPage;
+window.renderCartPage = renderCartPage;
+window.renderFavPage = renderFavPage;
