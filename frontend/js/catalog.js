@@ -9,7 +9,7 @@ async function initCatalogPage() {
     const category = urlParams.get('category');
     const searchQuery = urlParams.get('search');
 
-    // Ищем элементы КAЖДЫЙ РАЗ заново
+    // Ищем элементы Каждый РАЗ заново в обновленном DOM
     const titleElement = document.getElementById('title');
     const gridElement = document.getElementById('product-grid');
 
@@ -17,12 +17,11 @@ async function initCatalogPage() {
     const popularContainer = document.getElementById('popular-products-grid');
     const saleContainer = document.getElementById('sale-products-grid');
 
-    // Если мы не на главной и не в каталоге — выходим
     const isMainPage = newContainer || popularContainer || saleContainer;
     const isCatalogPage = gridElement && titleElement;
 
     if (!isMainPage && !isCatalogPage) {
-        console.log("⚠️ Контейнеры товаров не найдены на текущей странице.");
+        console.log("⚠️ На этой странице нет контейнеров для товаров.");
         return;
     }
 
@@ -32,10 +31,11 @@ async function initCatalogPage() {
         if (!response.ok) throw new Error('Ошибка загрузки данных с сервера');
 
         const products = await response.json();
-        console.log(`✅ Успешно получено ${products.length} товаров`);
+        console.log(`✅ Получено ${products.length} товаров с бэкенда`);
 
         // 1. Логика для страницы КАТАЛОГА (special.html)
-        if (gridElement && titleElement) {
+        if (isCatalogPage) {
+            console.log("📦 Отрисовка страницы КАТАЛОГА...");
             let filteredProducts = [];
             let pageTitle = "Товари";
 
@@ -71,22 +71,25 @@ async function initCatalogPage() {
         }
 
         // 2. Логика для ГЛАВНОЙ СТРАНИЦЫ (index.html)
-        if (newContainer) {
-            newContainer.innerHTML = '';
-            const newProducts = products.filter(item => item.isNew).slice(0, 4);
-            newProducts.forEach(item => renderCard(item, newContainer, 'new'));
-        }
+        if (isMainPage) {
+            console.log("🏠 Отрисовка ГЛАВНОЙ страницы...");
+            if (newContainer) {
+                newContainer.innerHTML = '';
+                const newProducts = products.filter(item => item.isNew).slice(0, 4);
+                newProducts.forEach(item => renderCard(item, newContainer, 'new'));
+            }
 
-        if (popularContainer) {
-            popularContainer.innerHTML = '';
-            const popularProducts = products.filter(item => item.isPopular).slice(0, 4);
-            popularProducts.forEach(item => renderCard(item, popularContainer, 'popular'));
-        }
+            if (popularContainer) {
+                popularContainer.innerHTML = '';
+                const popularProducts = products.filter(item => item.isPopular).slice(0, 4);
+                popularProducts.forEach(item => renderCard(item, popularContainer, 'popular'));
+            }
 
-        if (saleContainer) {
-            saleContainer.innerHTML = '';
-            const saleProducts = products.filter(item => item.discount > 0).slice(0, 4);
-            saleProducts.forEach(item => renderCard(item, saleContainer, 'sale'));
+            if (saleContainer) {
+                saleContainer.innerHTML = '';
+                const saleProducts = products.filter(item => item.discount > 0).slice(0, 4);
+                saleProducts.forEach(item => renderCard(item, saleContainer, 'sale'));
+            }
         }
 
     } catch (error) {
@@ -96,13 +99,10 @@ async function initCatalogPage() {
         }
     }
 }
-// Привязываем к window, чтобы SPA-роутер гарантированно видел функцию
-window.initCatalogPage = initCatalogPage;
 
-// Первый запуск при полной загрузке HTML
+window.initCatalogPage = initCatalogPage;
 document.addEventListener('DOMContentLoaded', initCatalogPage);
 
-// Функция отрисовки для каталога (special.html)
 function renderProductGrid(productsList, container, currentType) {
     container.innerHTML = '';
 
@@ -161,7 +161,6 @@ function goToProduct(id) {
     }
 }
 
-// Функция отрисовки карточки для главной страницы (index.html)
 function renderCard(item, container, blockType) {
     const imgSrc = (item.img && (item.img.startsWith('http') || item.img.startsWith('/')))
         ? item.img
@@ -170,10 +169,7 @@ function renderCard(item, container, blockType) {
     const finalPrice = item.discount > 0 ? (item.price * (1 - item.discount / 100)).toFixed(2) : item.price.toFixed(2);
 
     let badgeHTML = '';
-
-    // Новая строгая логика для главной страницы:
     if (blockType === 'new') {
-        // В новинках ВСЕГДА пишем "New"
         badgeHTML = `<div class="badge badge-new">New</div>`;
     } else if (blockType === 'sale' && item.discount > 0) {
         badgeHTML = `<div class="badge badge-sale">-${item.discount}%</div>`;
@@ -204,7 +200,7 @@ function renderCard(item, container, blockType) {
     container.appendChild(card);
 }
 
-// Поиск (Suggestions)
+// Поисковые подсказки
 document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('header-search-input');
     const suggestionsContainer = document.getElementById('search-suggestions');
@@ -213,7 +209,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let allProducts = [];
 
-    // Получаем список всех товаров один раз, чтобы быстро фильтровать "на лету" без спама запросами
     async function loadProductsForSearch() {
         try {
             const response = await fetch(API_URL);
@@ -227,7 +222,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loadProductsForSearch();
 
-    // Обработчик ввода текста
     searchInput.addEventListener('input', (e) => {
         const query = e.target.value.trim().toLowerCase();
 
@@ -245,7 +239,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderSuggestions(matchedProducts);
     });
 
-    // Отрисовка списка совпадений
     function renderSuggestions(products) {
         suggestionsContainer.innerHTML = '';
 
@@ -272,7 +265,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
 
-            // При клике на подсказку сразу переходим на карточку товара
             div.addEventListener('click', () => {
                 goToProduct(item.id);
             });
@@ -283,18 +275,15 @@ document.addEventListener('DOMContentLoaded', () => {
         suggestionsContainer.style.display = 'block';
     }
 
-    // Закрываем меню подсказок при клике в любое другое место экрана
     document.addEventListener('click', (e) => {
         if (!searchInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
             suggestionsContainer.style.display = 'none';
         }
     });
 
-    // Возвращаем видимость подсказок, если пользователь кликнул по инпуту, в котором уже что-то введено
     searchInput.addEventListener('focus', () => {
         if (searchInput.value.trim().length > 0) {
             suggestionsContainer.style.display = 'block';
         }
     });
 });
-
