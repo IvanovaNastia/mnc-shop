@@ -39,18 +39,18 @@ async function navigateTo(url) {
             throw new Error('На цільовій сторінці не знайдено #main-content');
         }
 
-        // 1. Обновляем контент
-        contentArea.innerHTML = newContent.innerHTML;
-        
-        // 2. Обновляем URL и Title
+        // 1. Сначала обновляем URL в браузере, чтобы window.location.search соответствовал новому URL!
         history.pushState(null, '', url);
         document.title = newDoc.title;
         window.scrollTo(0, 0);
 
-        // 3. Выполняем скрипты
+        // 2. Вставляем новый контент
+        contentArea.innerHTML = newContent.innerHTML;
+
+        // 3. Выполняем скрипты с новой страницы (если они там есть)
         executeScriptsFromNewPage(newDoc);
 
-        // 4. Запускаем инициализацию логики каталога и корзины
+        // 4. Переинициализируем все JS-модули
         reinitializePageScripts();
 
     } catch (error) {
@@ -68,7 +68,8 @@ async function navigateTo(url) {
 }
 
 window.addEventListener('popstate', async () => {
-    await navigateTo(window.location.href);
+    // При навигации назад/вперед вручную вызываем инициализацию
+    reinitializePageScripts();
 });
 
 // Функция для выполнения скриптов, которые были на подгруженной странице
@@ -84,25 +85,34 @@ function executeScriptsFromNewPage(newDoc) {
 }
 
 function reinitializePageScripts() {
-    // 1. Отрисовка каталога / главной
-    if (typeof initCatalogPage === 'function') {
-        initCatalogPage();
-    } else if (typeof window.initCatalogPage === 'function') {
+    // Обновляем счетчики в шапке
+    if (typeof window.updateHeaderCounters === 'function') {
+        window.updateHeaderCounters();
+    }
+
+    // Каталог и Главная
+    if (typeof window.initCatalogPage === 'function') {
         window.initCatalogPage();
     }
     
-    // 2. Счетчики и страницы корзины/избранного/товара
-    if (typeof updateHeaderCounters === 'function') updateHeaderCounters();
-    
+    // Страница одного товара (product.html)
     if (window.location.pathname.includes('product.html')) {
-        if (typeof renderSingleProductPage === 'function') renderSingleProductPage();
+        if (typeof window.renderSingleProductPage === 'function') {
+            window.renderSingleProductPage();
+        }
     }
     
+    // Корзина
     if (document.querySelector('.cart-menu') || document.getElementById('shop_cart')) {
-        if (typeof renderCartPage === 'function') renderCartPage();
+        if (typeof window.renderCartPage === 'function') {
+            window.renderCartPage();
+        }
     }
     
+    // Избранное
     if (document.querySelector('.fav-menu') || document.getElementById('favourite')) {
-        if (typeof renderFavPage === 'function') renderFavPage();
+        if (typeof window.renderFavPage === 'function') {
+            window.renderFavPage();
+        }
     }
 }
