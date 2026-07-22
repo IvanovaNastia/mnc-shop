@@ -66,48 +66,30 @@ window.addEventListener('popstate', () => {
 });
 
 function reinitializePageScripts() {
-    console.log("⚙️ Выполняется reinitializePageScripts()");
+    console.log("👉 1. Запуск reinitializePageScripts");
 
-    // 1. Счетчик шапки
-    if (typeof window.updateHeaderCounters === 'function') {
-        window.updateHeaderCounters();
-    }
+    // 1. Счетчики
+    try {
+        if (typeof window.updateHeaderCounters === 'function') window.updateHeaderCounters();
+    } catch (e) { console.error("Ошибка в updateHeaderCounters:", e); }
 
-    // 2. Каталог и Главная (ПРИНУДИТЕЛЬНЫЙ ВЫЗОВ)
-    if (typeof window.initCatalogPage === 'function') {
-        window.initCatalogPage();
-    } else {
-        console.error("❌ window.initCatalogPage не найден!");
-    }
-    
-    // 3. Страница одного товара
-    if (window.location.pathname.includes('product.html')) {
-        if (typeof window.renderSingleProductPage === 'function') {
-            window.renderSingleProductPage();
+    // 2. КАТАЛОГ И ГЛАВНАЯ
+    try {
+        console.log("👉 2. Пробуем вызвать initCatalogPage...");
+        if (typeof window.initCatalogPage === 'function') {
+            window.initCatalogPage();
+        } else {
+            console.error("❌ window.initCatalogPage НЕ НАЙДЕН в window!");
         }
-    }
-    
-    // 4. Корзина
-    if (document.querySelector('.cart-menu') || document.getElementById('shop_cart')) {
-        if (typeof window.renderCartPage === 'function') {
-            window.renderCartPage();
-        }
-    }
-    
-    // 5. Избранное
-    if (document.querySelector('.fav-menu') || document.getElementById('favourite')) {
-        if (typeof window.renderFavPage === 'function') {
-            window.renderFavPage();
-        }
-    }
+    } catch (e) { console.error("Ошибка в initCatalogPage:", e); }
 
-    // 6. Аккордеон
-    if (typeof window.initAccordions === 'function') {
-        window.initAccordions();
-    }
+    // 3. Слайдер
+    try {
+        if (typeof window.initSwiper === 'function') window.initSwiper();
+    } catch (e) { console.error("Ошибка в initSwiper:", e); }
 
-    // 7. Слайдер Баннера
-    if (typeof window.initSwiper === 'function') {
-        window.initSwiper();
-    }
+    // 4. Аккордеон
+    try {
+        if (typeof window.initAccordions === 'function') window.initAccordions();
+    } catch (e) { console.error("Ошибка в initAccordions:", e); }
 }
