@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const titleElement = document.getElementById('title');
     const gridElement = document.getElementById('product-grid');
 
-    // Настройка ссылок в каталоге (работает сразу при загрузке DOM)
+    // Настройка ссылок в каталоге
     const catalogLinks = document.querySelectorAll('.catalog-list a');
     catalogLinks.forEach(link => {
         const categoryName = link.textContent.trim();
@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const response = await fetch(API_URL);
             if (!response.ok) throw new Error('Ошибка загрузки данных с сервера');
 
-            const products = await response.json(); // Получаем массив всех товаров от Python
+            const products = await response.json();
 
             // Логика для страницы КАТАЛОГА (special.html)
             if (gridElement && titleElement) {
@@ -120,27 +120,24 @@ function renderProductGrid(productsList, container, currentType) {
     }
 
     productsList.forEach(item => {
+        const imgSrc = (item.img && (item.img.startsWith('http') || item.img.startsWith('/')))
+            ? item.img
+            : `/${item.img || ''}`;
+
         const hasDiscount = item.discount > 0;
         const finalPrice = hasDiscount ? (item.price * (1 - item.discount / 100)).toFixed(2) : item.price.toFixed(2);
 
         let badgeHTML = '';
         if (currentType === 'new') {
             badgeHTML = `<div class="badge badge-new">NEW</div>`;
-        } else {
-            if (hasDiscount) {
-                badgeHTML = `<div class="badge badge-sale">-${item.discount}%</div>`;
-            }
+        } else if (hasDiscount) {
+            badgeHTML = `<div class="badge badge-sale">-${item.discount}%</div>`;
         }
 
-        let priceHTML = '';
-        if (hasDiscount) {
-            priceHTML = `
-                <div class="product-price-old">${item.price.toFixed(2)} грн</div>
-                <div class="product-price price-sale">${finalPrice} грн</div>
-            `;
-        } else {
-            priceHTML = `<div class="product-price">${finalPrice} грн</div>`;
-        }
+        let priceHTML = hasDiscount ? `
+            <div class="product-price-old">${item.price.toFixed(2)} грн</div>
+            <div class="product-price price-sale">${finalPrice} грн</div>
+        ` : `<div class="product-price">${finalPrice} грн</div>`;
 
         const card = document.createElement('div');
         card.className = 'product-card';
@@ -148,7 +145,7 @@ function renderProductGrid(productsList, container, currentType) {
         card.innerHTML = `
             <div class="product-img" onclick="goToProduct(${item.id})">
                 ${badgeHTML}
-                <img src="${item.img}" alt="${item.title}">
+                <img src="${imgSrc}" alt="${item.title}">
             </div>
             <div class="product-info" onclick="goToProduct(${item.id})">
                 <div class="product-title">${item.title}</div>
@@ -169,6 +166,10 @@ function goToProduct(id) {
 
 // Универсальная функция отрисовки карточки для главной страницы (index.html)
 function renderCard(item, container, blockType) {
+    const imgSrc = (item.img && (item.img.startsWith('http') || item.img.startsWith('/')))
+        ? item.img
+        : `/${item.img || ''}`;
+
     const finalPrice = item.discount > 0 ? (item.price * (1 - item.discount / 100)).toFixed(2) : item.price.toFixed(2);
 
     let badgeHTML = '';
@@ -177,14 +178,8 @@ function renderCard(item, container, blockType) {
     if (blockType === 'new') {
         // В новинках ВСЕГДА пишем "New"
         badgeHTML = `<div class="badge badge-new">New</div>`;
-    } else if (blockType === 'sale') {
-        // В акциях пишем процент скидки
-        if (item.discount > 0) {
-            badgeHTML = `<div class="badge badge-sale">-${item.discount}%</div>`;
-        }
-    } else if (blockType === 'popular') {
-        // В популярных товарах бейджи ВООБЩЕ НЕ НУЖНЫ (оставляем пустым)
-        badgeHTML = '';
+    } else if (blockType === 'sale' && item.discount > 0) {
+        badgeHTML = `<div class="badge badge-sale">-${item.discount}%</div>`;
     }
 
     let priceHTML = item.discount > 0
@@ -198,7 +193,7 @@ function renderCard(item, container, blockType) {
     card.innerHTML = `
         <div class="product-img" onclick="goToProduct(${item.id})">
             ${badgeHTML}
-            <img src="${item.img}" alt="${item.title}">
+            <img src="${imgSrc}" alt="${item.title}">
         </div>
         <div class="product-info" onclick="goToProduct(${item.id})">
             <div class="product-title">${item.title}</div>
@@ -212,12 +207,11 @@ function renderCard(item, container, blockType) {
     container.appendChild(card);
 }
 
-// --- ЛОГИКА ИНТЕРАКТИВНОГО ПОИСКА (SUGGESTIONS) ---
-
+// Поиск (Suggestions)
 document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('header-search-input');
     const suggestionsContainer = document.getElementById('search-suggestions');
-    
+
     if (!searchInput || !suggestionsContainer) return;
 
     let allProducts = [];
@@ -239,18 +233,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // Обработчик ввода текста
     searchInput.addEventListener('input', (e) => {
         const query = e.target.value.trim().toLowerCase();
-        
+
         if (query.length < 1) {
             suggestionsContainer.innerHTML = '';
             suggestionsContainer.style.display = 'none';
             return;
         }
 
-        // Фильтруем товары по названию или категории
-        const matchedProducts = allProducts.filter(p => 
+        const matchedProducts = allProducts.filter(p =>
             (p.title && p.title.toLowerCase().includes(query)) ||
             (p.category && p.category.some(cat => cat.toLowerCase().includes(query)))
-        ).slice(0, 6); // Показываем максимум 6 подсказок, чтобы не перегружать экран
+        ).slice(0, 6);
 
         renderSuggestions(matchedProducts);
     });
@@ -266,13 +259,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         products.forEach(item => {
-            const hasDiscount = item.discount > 0;
-            const finalPrice = hasDiscount ? (item.price * (1 - item.discount / 100)).toFixed(2) : item.price.toFixed(2);
+            const imgSrc = (item.img && (item.img.startsWith('http') || item.img.startsWith('/')))
+                ? item.img
+                : `/${item.img || ''}`;
+
+            const finalPrice = item.discount > 0 ? (item.price * (1 - item.discount / 100)).toFixed(2) : item.price.toFixed(2);
 
             const div = document.createElement('div');
             div.className = 'suggestion-item';
             div.innerHTML = `
-                <img src="${item.img}" alt="${item.title}" class="suggestion-img">
+                <img src="${imgSrc}" alt="${item.title}" class="suggestion-img">
                 <div class="suggestion-info">
                     <span class="suggestion-title">${item.title}</span>
                     <span class="suggestion-price">${finalPrice} грн</span>

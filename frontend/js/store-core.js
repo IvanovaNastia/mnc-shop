@@ -1,23 +1,19 @@
 const CORE_API_URL = 'https://mnc-backend.onrender.com/api/products';
 
-// window.onbeforeunload = function() {
-//     return "Вы точно хотите покинуть страницу?";
-// };
-
 let cart = JSON.parse(localStorage.getItem('shop_cart')) || [];
 let favourite = JSON.parse(localStorage.getItem('favourite')) || [];
 
 document.addEventListener('DOMContentLoaded', () => {
     updateHeaderCounters();
-    
+
     if (window.location.pathname.includes('product.html')) {
         renderSingleProductPage();
     }
-    
+
     if (document.querySelector('.cart-menu') || document.getElementById('shop_cart')) {
         renderCartPage();
     }
-    
+
     if (document.querySelector('.fav-menu') || document.getElementById('favourite')) {
         renderFavPage();
     }
@@ -32,7 +28,7 @@ function updateHeaderCounters() {
         const favCount = favourite.length;
         if (favCount > 0) {
             favBadge.textContent = favCount;
-            favBadge.style.display = 'flex'; // или 'block', в зависимости от твоих стилей кружка
+            favBadge.style.display = 'flex';
         } else {
             favBadge.style.display = 'none';
         }
@@ -50,13 +46,12 @@ function updateHeaderCounters() {
     }
 }
 
-// Добавление в корзину (запрашивает актуальный товар с сервера перед добавлением)
-window.addToCart = async function(id) {
+window.addToCart = async function (id) {
     try {
         const response = await fetch(`${CORE_API_URL}`);
         const products = await response.json();
         const product = products.find(p => p.id === id);
-        
+
         if (!product) return;
 
         const cartItem = cart.find(item => item.id === id);
@@ -65,24 +60,22 @@ window.addToCart = async function(id) {
         } else {
             cart.push({ ...product, quantity: 1 });
         }
-        
+
         localStorage.setItem('shop_cart', JSON.stringify(cart));
         updateHeaderCounters();
-        
-        // Если мы находимся на странице корзины — сразу перерисовываем её
+
         if (document.querySelector('.cart-menu')) renderCartPage();
     } catch (e) {
         console.error("Не вдалося додати товар до кошика", e);
     }
 };
 
-// Добавление в избранное
-window.addToFav = async function(id) {
+window.addToFav = async function (id) {
     try {
         const response = await fetch(`${CORE_API_URL}`);
         const products = await response.json();
         const product = products.find(p => p.id === id);
-        
+
         if (!product) return;
 
         if (!favourite.some(item => item.id === id)) {
@@ -108,33 +101,31 @@ async function renderSingleProductPage() {
 
         if (!product) return;
 
+        const imgSrc = (product.img && (product.img.startsWith('http') || product.img.startsWith('/')))
+            ? product.img
+            : `/${product.img || ''}`;
+
         const productShow = document.querySelector('.product-show');
         const productDescr = document.querySelector('.product-descr');
 
         const hasDiscount = product.discount > 0;
         const finalPrice = hasDiscount ? (product.price * (1 - product.discount / 100)).toFixed(2) : product.price.toFixed(2);
 
-        // Генерация бейджа со скидкой (как в каталоге)
-        let badgeHTML = '';
-        if (hasDiscount) {
-            badgeHTML = `<div class="badge badge-sale">-${product.discount}%</div>`;
-        }
+        let badgeHTML = hasDiscount ? `<div class="badge badge-sale">-${product.discount}%</div>` : '';
 
         if (productShow) {
             productShow.innerHTML = `
                 <div class="show-img">
-                    ${badgeHTML} <!-- Добавляем бейдж внутрь контейнера картинки -->
-                    <img src="${product.img}" alt="${product.title}">
+                    ${badgeHTML}
+                    <img src="${imgSrc}" alt="${product.title}">
                 </div>
                 <div class="show-info">
                     <div class="show-text">
                         <h1>${product.title}</h1>
-                        ${hasDiscount ? 
-                            `<div class="show-price product-price-old show-price-old">${product.price.toFixed(2)} грн</div>
-                            <div class="show-price price-sale show-price-sale">${finalPrice} грн</div>
-                            ` 
-                            : `<div>${finalPrice} грн</div>
-                            `}
+                        ${hasDiscount ?
+                    `<div class="show-price product-price-old show-price-old">${product.price.toFixed(2)} грн</div>
+                     <div class="show-price price-sale show-price-sale">${finalPrice} грн</div>`
+                    : `<div>${finalPrice} грн</div>`}
                     </div>
                     <div class="show-btn">
                         <button class="btn-fav" onclick="addToFav(${product.id})">В обране</button>
@@ -183,7 +174,7 @@ async function renderSingleProductPage() {
 function renderCartPage() {
     const cartMenu = document.querySelector('.cart-menu');
     const asideContainer = document.querySelector('.aside-menu');
-    
+
     if (!cartMenu) return;
 
     if (cart.length === 0) {
@@ -195,12 +186,16 @@ function renderCartPage() {
     if (asideContainer) asideContainer.style.display = 'block';
 
     cartMenu.innerHTML = cart.map(item => {
+        const imgSrc = (item.img && (item.img.startsWith('http') || item.img.startsWith('/')))
+            ? item.img
+            : `/${item.img || ''}`;
+
         const finalPrice = item.discount > 0 ? (item.price * (1 - item.discount / 100)) : item.price;
         return `
             <div class="cart-card" onclick="window.location.href='product.html?id=${item.id}'">
                 <div class="cart-info">
                     <div class="cart-img">
-                        <img src="${item.img}" alt="${item.title}">
+                        <img src="${imgSrc}" alt="${item.title}">
                     </div>
                     <div class="cart-text">
                         <h2 class="text-title">${item.title}</h2>
@@ -240,7 +235,7 @@ function renderCartPage() {
     }
 }
 
-window.removeFromCart = function(id) {
+window.removeFromCart = function (id) {
     cart = cart.filter(item => item.id !== id);
     localStorage.setItem('shop_cart', JSON.stringify(cart));
     renderCartPage();
@@ -258,12 +253,16 @@ function renderFavPage() {
     }
 
     favMenu.innerHTML = favourite.map(item => {
+        const imgSrc = (item.img && (item.img.startsWith('http') || item.img.startsWith('/')))
+            ? item.img
+            : `/${item.img || ''}`;
+
         const finalPrice = item.discount > 0 ? (item.price * (1 - item.discount / 100)) : item.price;
         return `
             <div class="fav-card" onclick="window.location.href='product.html?id=${item.id}'">
                 <div class="fav-info">
                     <div class="fav-img">
-                        <img src="${item.img}" alt="${item.title}">
+                        <img src="${imgSrc}" alt="${item.title}">
                     </div>
                     <div class="fav-text">
                         <h2 class="text-title">${item.title}</h2>
@@ -283,14 +282,14 @@ function renderFavPage() {
     }).join('');
 }
 
-window.removeFromFav = function(id) {
+window.removeFromFav = function (id) {
     favourite = favourite.filter(item => item.id !== id);
     localStorage.setItem('favourite', JSON.stringify(favourite));
     renderFavPage();
     updateHeaderCounters();
 };
 
-window.moveFromFavToCart = function(id) {
+window.moveFromFavToCart = function (id) {
     addToCart(id);
     favourite = favourite.filter(item => item.id !== id);
     localStorage.setItem('favourite', JSON.stringify(favourite));
@@ -310,8 +309,7 @@ document.addEventListener('click', (e) => {
     if (e.target && e.target.id === 'checkout-btn') {
         orderModal.style.display = 'flex';
     }
-    
-    // Клик по крестику закрытия формы заказа
+
     if (e.target && e.target.classList.contains('close-modal')) {
         orderModal.style.display = 'none';
     }
@@ -319,24 +317,22 @@ document.addEventListener('click', (e) => {
     // Клик по кнопке "ОК" в окне успешного заказа
     if (e.target && e.target.id === 'successCloseBtn') {
         successModal.style.display = 'none';
-        renderCartPage(); // Перерисовываем пустую корзину
+        renderCartPage();
     }
 });
 
-// --- ОБРАБОТКА ОТПРАВКИ ФОРМЫ ЗАКАЗА ---
-// --- ОБРАБОТКА ОТПРАВКИ ФОРМЫ ЗАКАЗА ---
-document.addEventListener('submit', function(e) {
+document.addEventListener('submit', function (e) {
     const orderModal = document.getElementById('orderModal');
-    
+
     if (e.target && (e.target.id === 'orderForm' || e.target.closest('#orderModal'))) {
-        e.preventDefault(); // Полностью блокируем стандартное поведение формы
+        e.preventDefault();
 
         const form = e.target;
         
         const nameInput = form.querySelector('[name="userName"]') || document.getElementById('userName');
         const emailInput = form.querySelector('[name="userEmail"]') || document.getElementById('userEmail');
         const phoneInput = form.querySelector('[name="userPhone"]') || document.getElementById('userPhone');
-        
+
         if (!nameInput || !emailInput || !phoneInput) {
             alert("Сталася технічна помилка: не знайдено поля форми.");
             return false;
@@ -389,7 +385,7 @@ document.addEventListener('submit', function(e) {
             phone: phoneValue,
             items: itemsToSend
         };
-        
+
         fetch('https://mnc-backend.onrender.com/api/orders', {
             method: 'POST',
             headers: {
@@ -397,38 +393,28 @@ document.addEventListener('submit', function(e) {
             },
             body: JSON.stringify(orderData)
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Помилка сервера: ' + response.status);
-            }
-            return response.json();
-        })
-        .then(data => {
-            // Скрываем окно оформления заказа
-            if (orderModal) orderModal.style.display = 'none';
-            
-            // Очищаем форму
-            form.reset();
+            .then(response => {
+                if (!response.ok) throw new Error('Помилка сервера: ' + response.status);
+                return response.json();
+            })
+            .then(() => {
+                if (orderModal) orderModal.style.display = 'none';
+                form.reset();
+                localStorage.removeItem('shop_cart');
+                cart = [];
+                updateHeaderCounters();
 
-            // Чистим localStorage
-            localStorage.removeItem('shop_cart');
-            
-            // Синхронизируем локальный массив cart в JS и обновляем шапку
-            cart = [];
-            updateHeaderCounters();
-
-            // Показываем окно успеха
-            const successModal = document.getElementById('successModal');
-            if (successModal) {
-                successModal.style.display = 'flex';
-            } else {
-                alert("Дякуємо! Ваше замовлення прийнято.");
-            }
-        })
-        .catch(error => {
-            console.error("Помилка при отправці:", error);
-            alert("Не вдалося відправити замовлення.");
-        });
+                const successModal = document.getElementById('successModal');
+                if (successModal) {
+                    successModal.style.display = 'flex';
+                } else {
+                    alert("Дякуємо! Ваше замовлення прийнято.");
+                }
+            })
+            .catch(error => {
+                console.error("Помилка при отправці:", error);
+                alert("Не вдалося відправити замовлення.");
+            });
 
         return false;
     }

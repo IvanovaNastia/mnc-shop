@@ -11,8 +11,8 @@ if (!adminPassword) {
 }
 
 function logout() {
-    localStorage.removeItem('admin_password'); // Стираем пароль из памяти
-    window.location.href = 'login.html';       // Выкидываем на страницу входа
+    localStorage.removeItem('admin_password');
+    window.location.href = 'login.html';
 }
 
 document.addEventListener('DOMContentLoaded', loadAdminOrders);
@@ -28,21 +28,20 @@ async function loadAdminOrders() {
         });
 
         if (response.status === 401) {
-            // Если сервер ответил, что пароль неверный
-            localStorage.removeItem('admin_password'); // стираем плохой пароль
-            window.location.href = 'login.html'; // отправляем вводить заново
+            localStorage.removeItem('admin_password');
+            window.location.href = 'login.html';
             return;
         }
 
         if (!response.ok) throw new Error('Не вдалося завантажити замовлення');
-        
+
         const orders = await response.json();
         renderOrdersTable(orders);
     } catch (error) {
         console.error("Помилка при завантаженні:", error);
         const tbody = document.getElementById('admin-orders-list');
         if (tbody) {
-            tbody.innerHTML = `<tr><td class="admin-ord-error" colspan="8">Помилка завантаження даних: ${error.message}</td></tr>`;
+            tbody.innerHTML = `<tr><td class="admin-ord-error" colspan="9">Помилка завантаження даних: ${error.message}</td></tr>`;
         }
     }
 }
@@ -52,7 +51,7 @@ function renderOrdersTable(orders) {
     if (!tbody) return;
 
     if (orders.length === 0) {
-        tbody.innerHTML = `<tr><td class="admin-no-product" colspan="8">Замовлень у базі даних немає</td></tr>`;
+        tbody.innerHTML = `<tr><td class="admin-no-product" colspan="9">Замовлень у базі даних немає</td></tr>`;
         return;
     }
 
@@ -64,13 +63,17 @@ function renderOrdersTable(orders) {
             itemsHTML = order.items.map(item => {
                 const hasDiscount = item.discount > 0;
                 const pricePerUnit = hasDiscount ? item.price * (1 - item.discount / 100) : item.price;
-                const count = item.quantity || 1; 
+                const count = item.quantity || 1;
                 const itemTotalPrice = pricePerUnit * count;
                 totalOrderPrice += itemTotalPrice;
 
+                const imgSrc = (item.img && (item.img.startsWith('http') || item.img.startsWith('/')))
+                    ? item.img
+                    : `/${item.img || ''}`;
+
                 return `
                     <div class="admin-ord-img">
-                        <img src="${item.img}">
+                        <img src="${imgSrc}">
                         <div>
                             <div class="admin-ord-img-title">${item.title}</div>
                             <div class="admin-ord-img-price">${count} шт. x ${pricePerUnit.toFixed(2)} грн</div>
@@ -104,7 +107,7 @@ function renderOrdersTable(orders) {
                 <td>${orderDate}</td>
                 <td>
                     <div class="btn-actions">
-                        <button class="btn-delete" onclick="deleteOrder('${order.id}')" class="admin-ord-del">Видалити</button>
+                        <button class="btn-delete admin-ord-del" onclick="deleteOrder('${order.id}')">Видалити</button>
                     </div>
                 </td>
             </tr>
@@ -117,9 +120,9 @@ async function changeOrderStatus(orderId, newStatus) {
     try {
         const response = await fetch(`${ORDERS_API_URL}/${orderId}/status`, {
             method: 'PUT',
-            headers: { 
+            headers: {
                 'Content-Type': 'application/json',
-                'X-Admin-Password': adminPassword // Передаем пароль
+                'X-Admin-Password': adminPassword
             },
             body: JSON.stringify({ status: newStatus })
         });
@@ -151,7 +154,7 @@ async function deleteOrder(id) {
         const response = await fetch(`${ORDERS_API_URL}/${id}`, {
             method: 'DELETE',
             headers: {
-                'X-Admin-Password': adminPassword // Передаем пароль
+                'X-Admin-Password': adminPassword
             }
         });
 
@@ -163,7 +166,7 @@ async function deleteOrder(id) {
 
         if (response.ok) {
             alert('Замовлення успішно видалено!');
-            loadAdminOrders(); 
+            loadAdminOrders();
         } else {
             const errData = await response.json();
             alert(`Помилка сервера при видаленні: ${errData.detail || 'Код відповіді не OK'}`);

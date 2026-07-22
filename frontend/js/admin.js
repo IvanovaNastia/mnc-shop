@@ -11,8 +11,8 @@ if (!adminPassword) {
 }
 
 function logout() {
-    localStorage.removeItem('admin_password'); // Стираем пароль из памяти
-    window.location.href = 'login.html';       // Выкидываем на страницу входа
+    localStorage.removeItem('admin_password');
+    window.location.href = 'login.html';
 }
 
 // Загружаем товары при открытии страницы
@@ -22,10 +22,10 @@ async function loadAdminProducts() {
     try {
         // Эндпоинт GET /api/products открытый, но мы можем отправлять заголовок для единообразия
         const response = await fetch(ADMIN_API_URL);
-        const products = await response.json(); // Считываем JSON ровно один раз
-        
-        window.allProducts = products; // Сохраняем данные для редактирования
-        renderAdminTable(products);     // Отрисовываем таблицу
+        const products = await response.json();
+
+        window.allProducts = products;
+        renderAdminTable(products);
     } catch (error) {
         console.error("Помилка завантаження товарів для адмінки:", error);
     }
@@ -36,35 +36,30 @@ function renderAdminTable(products) {
     if (!tbody) return;
 
     if (products.length === 0) {
-        tbody.innerHTML = `<tr><td class="admin-no-product" colspan="11">Товарів у базі даних немає</td></tr>`;
+        tbody.innerHTML = `<tr><td class="admin-no-product" colspan="12">Товарів у базі даних немає</td></tr>`;
         return;
     }
 
-    tbody.innerHTML = products.map((item, index) => {
+    tbody.innerHTML = products.map((item) => {
+        const imgSrc = (item.img && (item.img.startsWith('http') || item.img.startsWith('/')))
+            ? item.img
+            : `/${item.img || ''}`;
+
         const hasDiscount = item.discount > 0;
         const finalPrice = hasDiscount ? item.price * (1 - item.discount / 100) : item.price;
 
-        // Проверяем строго свойство item.category, которое пришло из SQLite
-        let categoriesHTML = '';
-        if (Array.isArray(item.category) && item.category.length > 0) {
-            categoriesHTML = item.category.map(cat => `<div>• ${cat}</div>`).join('');
-        } else {
-            categoriesHTML = 'Немає';
-        }
+        let categoriesHTML = (Array.isArray(item.category) && item.category.length > 0)
+            ? item.category.map(cat => `<div>• ${cat}</div>`).join('')
+            : 'Немає';
 
-        let specsHTML = '';
-        if (item.specs && typeof item.specs === 'object') {
-            specsHTML = Object.entries(item.specs)
-                .map(([key, value]) => `<div><strong>${key}:</strong> ${value}</div>`)
-                .join('');
-        } else {
-            specsHTML = 'Немає';
-        }
+        let specsHTML = (item.specs && typeof item.specs === 'object')
+            ? Object.entries(item.specs).map(([key, value]) => `<div><strong>${key}:</strong> ${value}</div>`).join('')
+            : 'Немає';
 
         return `
             <tr>
                 <td><strong>${item.id}</strong></td>
-                <td class="admin-img"><img src="${item.img}" alt="${item.title}"></td>
+                <td class="admin-img"><img src="${imgSrc}" alt="${item.title}"></td>
                 <td>${item.title}</td>
                 <td>${item.price.toFixed(2)} грн</td>
                 <td>${item.discount > 0 ? `-${item.discount}%` : 'Немає'}</td>
@@ -89,7 +84,7 @@ function renderAdminTable(products) {
 async function editProduct(id) {
     try {
         if (!window.allProducts) return;
-        
+
         const item = window.allProducts.find(p => p.id === id);
         if (!item) {
             alert("Товар не знайдено в локальному списку");
@@ -123,8 +118,8 @@ async function editProduct(id) {
 
         // 5. Заполняем характеристики
         const specsContainer = document.getElementById('specs-container');
-        specsContainer.innerHTML = ''; 
-        
+        specsContainer.innerHTML = '';
+
         if (item.specs && typeof item.specs === 'object') {
             Object.entries(item.specs).forEach(([key, value]) => {
                 const row = document.createElement('div');
@@ -157,13 +152,11 @@ async function deleteProduct(id) {
     try {
         const response = await fetch(`${ADMIN_API_URL}/${id}`, {
             method: 'DELETE',
-            headers: {
-                'X-Admin-Password': adminPassword // Передаем секретный пароль
-            }
+            headers: { 'X-Admin-Password': adminPassword }
         });
 
         if (response.status === 401) {
-            alert("Сесія застаріла або невірна. Будь ласка, увійдіть знову.");
+            alert("Сесія застаріла или невірна. Будь ласка, увійдіть знову.");
             localStorage.removeItem('admin_password');
             window.location.href = 'login.html';
             return;
@@ -174,7 +167,7 @@ async function deleteProduct(id) {
             loadAdminProducts();
         } else {
             const errorData = await response.json();
-            alert(`Помилка видаления: ${errorData.detail || 'Щось пішло не так'}`);
+            alert(`Помилка видалення: ${errorData.detail || 'Щось пішло не так'}`);
         }
     } catch (error) {
         console.error("Помилка при видаленні товару:", error);
@@ -187,36 +180,24 @@ const openModalBtn = document.getElementById('openAddModalBtn');
 const closeModalBtn = document.getElementById('closeModalBtn');
 const addProductForm = document.getElementById('addProductForm');
 
-// Открытие модалки
-if (openModalBtn) {
-    openModalBtn.addEventListener('click', () => {
-        modal.style.display = 'flex';
-    });
-}
+if (openModalBtn) openModalBtn.addEventListener('click', () => modal.style.display = 'flex');
 
-// Сброс модального окна в начальное состояние
 function resetModalState() {
     modal.style.display = 'none';
     if (addProductForm) addProductForm.reset();
     document.getElementById('modalTitle').textContent = 'Додати новий товар';
     document.getElementById('form-product-id').value = '';
     document.getElementById('specs-container').innerHTML = '';
-    
-    // Возвращаем обязательность выбора файла для новых товаров
+
     const fileInput = document.getElementById('form-img-file');
     if (fileInput) fileInput.required = true;
-    
+
     const oldPathInput = document.getElementById('form-img-old-path');
     if (oldPathInput) oldPathInput.value = '';
 }
 
-if (closeModalBtn) {
-    closeModalBtn.addEventListener('click', resetModalState);
-}
-
-window.addEventListener('click', (e) => {
-    if (e.target === modal) resetModalState();
-});
+if (closeModalBtn) closeModalBtn.addEventListener('click', resetModalState);
+window.addEventListener('click', (e) => { if (e.target === modal) resetModalState(); });
 
 // Инициализация формы (с поддержкой авторизации и POST/PUT)
 if (addProductForm) {
@@ -228,7 +209,7 @@ if (addProductForm) {
 
         const fileInput = document.getElementById('form-img-file');
         const oldImagePath = document.getElementById('form-img-old-path').value;
-        let finalImgPath = oldImagePath || 'img/products/aaa.png'; // Заглушка по умолчанию
+        let finalImgPath = oldImagePath || 'img/products/aaa.png';
 
         // 1. ИСПРАВЛЕНО: Загрузка файла картинки на сервер с заголовком авторизации
         if (fileInput && fileInput.files.length > 0) {
@@ -238,9 +219,7 @@ if (addProductForm) {
             try {
                 const uploadResponse = await fetch('https://mnc-backend.onrender.com/api/upload', {
                     method: 'POST',
-                    headers: {
-                        'X-Admin-Password': adminPassword // Передаем пароль для загрузки изображений
-                    },
+                    headers: { 'X-Admin-Password': adminPassword },
                     body: formData
                 });
 
@@ -253,10 +232,10 @@ if (addProductForm) {
 
                 if (uploadResponse.ok) {
                     const uploadResult = await uploadResponse.json();
-                    finalImgPath = uploadResult.img_url; 
+                    finalImgPath = uploadResult.img_url;
                 } else {
                     alert("Помилка при завантаженні картинки на сервер");
-                    return; 
+                    return;
                 }
             } catch (err) {
                 console.error("Помилка загрузки фото:", err);
@@ -265,14 +244,11 @@ if (addProductForm) {
             }
         }
 
-        // 2. Собираем чекбоксы категорий
-        const checkedCategories = Array.from(document.querySelectorAll('input[name="categories"]:checked'))
-            .map(cb => cb.value);
+        const checkedCategories = Array.from(document.querySelectorAll('input[name="categories"]:checked')).map(cb => cb.value);
 
         // 3. Собираем кастомные характеристики
         const specsObj = {};
-        const rows = document.querySelectorAll('.spec-dynamic-row');
-        rows.forEach(row => {
+        document.querySelectorAll('.spec-dynamic-row').forEach(row => {
             const key = row.querySelector('.spec-key').value.trim();
             const val = row.querySelector('.spec-value').value.trim();
             if (key && val) specsObj[key] = val;
@@ -283,7 +259,7 @@ if (addProductForm) {
             title: document.getElementById('form-title').value.trim(),
             price: parseFloat(document.getElementById('form-price').value),
             discount: parseInt(document.getElementById('form-discount').value) || 0,
-            img: finalImgPath, 
+            img: finalImgPath,
             category: checkedCategories,
             isNew: document.getElementById('form-isNew').checked,
             isPopular: document.getElementById('form-isPopular').checked,
@@ -304,9 +280,9 @@ if (addProductForm) {
             // --- ИСПРАВЛЕНО: ОТПРАВКА ДАННЫХ ТОВАРА С ЗАГОЛОВКОМ АВТОРИЗАЦИИ ---
             const response = await fetch(url, {
                 method: method,
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
-                    'X-Admin-Password': adminPassword // Передаем секретный пароль
+                    'X-Admin-Password': adminPassword
                 },
                 body: JSON.stringify(productData)
             });

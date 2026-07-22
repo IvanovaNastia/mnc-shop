@@ -67,10 +67,22 @@ window.addEventListener('popstate', async () => {
 });
 
 function reinitializePageScripts() {
-    if (typeof loadProducts === 'function') {
-        loadProducts(); 
+    // Инициализация каталога и главной страницы
+    if (typeof window.initCatalogPage === 'function') {
+        window.initCatalogPage();
     }
-    if (typeof renderCart === 'function') {
-        renderCart();
+    
+    // Инициализация корзины, избранного и отдельного товара (из cart.js)
+    if (typeof updateHeaderCounters === 'function') {
+        updateHeaderCounters();
+    }
+    if (window.location.pathname.includes('product.html') && typeof renderSingleProductPage === 'function') {
+        renderSingleProductPage();
+    }
+    if ((document.querySelector('.cart-menu') || document.getElementById('shop_cart')) && typeof renderCartPage === 'function') {
+        renderCartPage();
+    }
+    if ((document.querySelector('.fav-menu') || document.getElementById('favourite')) && typeof renderFavPage === 'function') {
+        renderFavPage();
     }
 }

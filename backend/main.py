@@ -439,7 +439,7 @@ async def upload_image(file: UploadFile = File(...), admin_password: str = Depen
         image.save(file_path, "WEBP", quality=80)
         
         # Возвращаем путь, который админка подставит в карточку товара
-        return {"img_url": f"img/products/{webp_filename}"}
+        return {"img_url": f"/img/products/{webp_filename}"}
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Не вдалося обробити та зберегти зображення: {str(e)}")
