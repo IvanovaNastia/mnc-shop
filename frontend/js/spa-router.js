@@ -20,11 +20,8 @@ async function navigateTo(url) {
         return;
     }
 
-    // Закрываем меню
+    // Закрываем открытые меню
     document.querySelectorAll('.catalog-menu, .offers-menu').forEach(m => m.classList.remove('_active'));
-
-    const currentHeight = contentArea.offsetHeight;
-    contentArea.style.minHeight = `${currentHeight}px`;
 
     try {
         const response = await fetch(url);
@@ -39,7 +36,7 @@ async function navigateTo(url) {
             throw new Error('Не знайдено #main-content');
         }
 
-        // 1. Обновляем URL
+        // 1. Обновляем URL и заголовок
         history.pushState(null, '', url);
         document.title = newDoc.title;
         window.scrollTo(0, 0);
@@ -47,18 +44,14 @@ async function navigateTo(url) {
         // 2. Вставляем новый HTML
         contentArea.innerHTML = newContent.innerHTML;
 
-        // 3. Ждем 1 кадр рендера браузера, И ТОЛЬКО ПОТОМ запускаем скрипты!
-        requestAnimationFrame(() => {
+        // 3. Даем DOM полные 50мс на перерисуй и вызываем скрипты
+        setTimeout(() => {
             reinitializePageScripts();
-        });
+        }, 50);
 
     } catch (error) {
         console.error("Помилка SPA:", error);
         window.location.href = url;
-    } finally {
-        setTimeout(() => {
-            contentArea.style.minHeight = '';
-        }, 150);
     }
 }
 

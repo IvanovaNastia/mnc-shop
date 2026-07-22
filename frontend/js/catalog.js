@@ -2,114 +2,100 @@ const API_URL = 'https://mnc-backend.onrender.com/api/products';
 
 // Глобальная функция инициализации для SPA-роутера и обычного DOMContentLoaded
 async function initCatalogPage() {
+    console.log("🔄 initCatalogPage запущен на URL:", window.location.href);
+
     const urlParams = new URLSearchParams(window.location.search);
     const type = urlParams.get('type');
     const category = urlParams.get('category');
     const searchQuery = urlParams.get('search');
 
+    // Ищем элементы КAЖДЫЙ РАЗ заново
     const titleElement = document.getElementById('title');
     const gridElement = document.getElementById('product-grid');
 
-    // Находим контейнеры прямо в момент вызова функции (КРИТИЧНО ДЛЯ SPA)
     const newContainer = document.getElementById('new-products-grid');
     const popularContainer = document.getElementById('popular-products-grid');
     const saleContainer = document.getElementById('sale-products-grid');
 
-    // Настройка ссылок в каталоге
-    const catalogLinks = document.querySelectorAll('.catalog-list a');
-    catalogLinks.forEach(link => {
-        const categoryName = link.textContent.trim();
-        if (categoryName === "Всі товари") {
-            link.href = "special.html?type=all";
-        } else {
-            link.href = `special.html?category=${encodeURIComponent(categoryName)}`;
-        }
-    });
+    // Если мы не на главной и не в каталоге — выходим
+    const isMainPage = newContainer || popularContainer || saleContainer;
+    const isCatalogPage = gridElement && titleElement;
 
-    // Настройка кнопки баннера
-    const bannerBtn = document.querySelector('.banner-action-btn');
-    if (bannerBtn) {
-        bannerBtn.onclick = () => {
-            if (typeof window.spaNavigate === 'function') {
-                window.spaNavigate("special.html?type=all");
-            } else {
-                window.location.href = "special.html?type=all";
-            }
-        };
+    if (!isMainPage && !isCatalogPage) {
+        console.log("⚠️ Контейнеры товаров не найдены на текущей странице.");
+        return;
     }
 
-    // Загружаем товары, если есть хотя бы один нужный контейнер на текущей странице
-    if ((gridElement && titleElement) || newContainer || popularContainer || saleContainer) {
-        try {
-            const response = await fetch(API_URL);
-            if (!response.ok) throw new Error('Ошибка загрузки данных с сервера');
+    try {
+        console.log("📡 Делаем fetch запрос к бэкенду...");
+        const response = await fetch(API_URL);
+        if (!response.ok) throw new Error('Ошибка загрузки данных с сервера');
 
-            const products = await response.json();
+        const products = await response.json();
+        console.log(`✅ Успешно получено ${products.length} товаров`);
 
-            // 1. Логика для страницы КАТАЛОГА (special.html)
-            if (gridElement && titleElement) {
-                let filteredProducts = [];
-                let pageTitle = "Товари";
+        // 1. Логика для страницы КАТАЛОГА (special.html)
+        if (gridElement && titleElement) {
+            let filteredProducts = [];
+            let pageTitle = "Товари";
 
-                if (searchQuery) {
-                    const query = searchQuery.trim().toLowerCase();
-                    pageTitle = `Результати пошуку: "${searchQuery}"`;
-                    filteredProducts = products.filter(p =>
-                        (p.title && p.title.toLowerCase().includes(query)) ||
-                        (p.description && p.description.toLowerCase().includes(query))
-                    );
-                } else if (type === 'new') {
-                    pageTitle = "Новинки";
-                    filteredProducts = products.filter(p => p.isNew);
-                } else if (type === 'popular') {
-                    pageTitle = "Популярні товари";
-                    filteredProducts = products.filter(p => p.isPopular);
-                } else if (type === 'sale') {
-                    pageTitle = "Акції та знижки";
-                    filteredProducts = products.filter(p => p.discount > 0);
-                } else if (type === 'all') {
-                    pageTitle = "Всі товари";
-                    filteredProducts = [...products];
-                } else if (category) {
-                    pageTitle = category;
-                    filteredProducts = products.filter(p => p.category && p.category.includes(category));
-                } else {
-                    pageTitle = "Каталог товарів";
-                    filteredProducts = [...products];
-                }
-
-                titleElement.textContent = pageTitle;
-                renderProductGrid(filteredProducts, gridElement, type);
+            if (searchQuery) {
+                const query = searchQuery.trim().toLowerCase();
+                pageTitle = `Результати пошуку: "${searchQuery}"`;
+                filteredProducts = products.filter(p =>
+                    (p.title && p.title.toLowerCase().includes(query)) ||
+                    (p.description && p.description.toLowerCase().includes(query))
+                );
+            } else if (type === 'new') {
+                pageTitle = "Новинки";
+                filteredProducts = products.filter(p => p.isNew);
+            } else if (type === 'popular') {
+                pageTitle = "Популярні товари";
+                filteredProducts = products.filter(p => p.isPopular);
+            } else if (type === 'sale') {
+                pageTitle = "Акції та знижки";
+                filteredProducts = products.filter(p => p.discount > 0);
+            } else if (type === 'all') {
+                pageTitle = "Всі товари";
+                filteredProducts = [...products];
+            } else if (category) {
+                pageTitle = category;
+                filteredProducts = products.filter(p => p.category && p.category.includes(category));
+            } else {
+                pageTitle = "Каталог товарів";
+                filteredProducts = [...products];
             }
 
-            // 2. Логика для ГЛАВНОЙ СТРАНИЦЫ (index.html)
-            if (newContainer) {
-                newContainer.innerHTML = '';
-                const newProducts = products.filter(item => item.isNew).slice(0, 4);
-                newProducts.forEach(item => renderCard(item, newContainer, 'new'));
-            }
+            titleElement.textContent = pageTitle;
+            renderProductGrid(filteredProducts, gridElement, type);
+        }
 
-            if (popularContainer) {
-                popularContainer.innerHTML = '';
-                const popularProducts = products.filter(item => item.isPopular).slice(0, 4);
-                popularProducts.forEach(item => renderCard(item, popularContainer, 'popular'));
-            }
+        // 2. Логика для ГЛАВНОЙ СТРАНИЦЫ (index.html)
+        if (newContainer) {
+            newContainer.innerHTML = '';
+            const newProducts = products.filter(item => item.isNew).slice(0, 4);
+            newProducts.forEach(item => renderCard(item, newContainer, 'new'));
+        }
 
-            if (saleContainer) {
-                saleContainer.innerHTML = '';
-                const saleProducts = products.filter(item => item.discount > 0).slice(0, 4);
-                saleProducts.forEach(item => renderCard(item, saleContainer, 'sale'));
-            }
+        if (popularContainer) {
+            popularContainer.innerHTML = '';
+            const popularProducts = products.filter(item => item.isPopular).slice(0, 4);
+            popularProducts.forEach(item => renderCard(item, popularContainer, 'popular'));
+        }
 
-        } catch (error) {
-            console.error('Ошибка:', error);
-            if (gridElement) {
-                gridElement.innerHTML = '<div class="empty-message">Не вдалося завантажити товари. Спробуйте пізніше.</div>';
-            }
+        if (saleContainer) {
+            saleContainer.innerHTML = '';
+            const saleProducts = products.filter(item => item.discount > 0).slice(0, 4);
+            saleProducts.forEach(item => renderCard(item, saleContainer, 'sale'));
+        }
+
+    } catch (error) {
+        console.error('Ошибка при загрузке каталога:', error);
+        if (gridElement) {
+            gridElement.innerHTML = '<div class="empty-message">Не вдалося завантажити товари. Спробуйте пізніше.</div>';
         }
     }
 }
-
 // Привязываем к window, чтобы SPA-роутер гарантированно видел функцию
 window.initCatalogPage = initCatalogPage;
 
