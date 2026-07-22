@@ -1,4 +1,4 @@
-const ADMIN_API_URL = 'http://127.0.0.1:8000/api/products';
+const ADMIN_API_URL = 'https://mnc-backend.onrender.com/api/products';
 
 // --- НАДЕЖНАЯ ПРОВЕРКА АВТОРИЗАЦИИ ---
 const adminPassword = localStorage.getItem('admin_password');
@@ -236,7 +236,7 @@ if (addProductForm) {
             formData.append("file", fileInput.files[0]);
 
             try {
-                const uploadResponse = await fetch('http://127.0.0.1:8000/api/upload', {
+                const uploadResponse = await fetch('https://mnc-backend.onrender.com/api/upload', {
                     method: 'POST',
                     headers: {
                         'X-Admin-Password': adminPassword // Передаем пароль для загрузки изображений

@@ -1,4 +1,4 @@
-const API_URL = 'http://127.0.0.1:8000/api/products'; // Укажи порт своего Python-сервера
+const API_URL = 'https://mnc-backend.onrender.com/api/products';
 
 document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);

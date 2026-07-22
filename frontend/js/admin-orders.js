@@ -1,4 +1,4 @@
-const ORDERS_API_URL = 'http://127.0.0.1:8000/api/orders';
+const ORDERS_API_URL = 'https://mnc-backend.onrender.com/api/orders';
 
 // Проверяем авторизацию при загрузке страницы
 const adminPassword = localStorage.getItem('admin_password');

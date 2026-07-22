@@ -1,4 +1,4 @@
-const CORE_API_URL = 'http://127.0.0.1:8000/api/products'; // Укажи порт своего сервера
+const CORE_API_URL = 'https://mnc-backend.onrender.com/api/products';
 
 // window.onbeforeunload = function() {
 //     return "Вы точно хотите покинуть страницу?";
@@ -390,7 +390,7 @@ document.addEventListener('submit', function(e) {
             items: itemsToSend
         };
         
-        fetch('http://127.0.0.1:8000/api/orders', {
+        fetch('https://mnc-backend.onrender.com/api/orders', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
