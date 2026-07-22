@@ -1,6 +1,7 @@
 const API_URL = 'https://mnc-backend.onrender.com/api/products';
 
-document.addEventListener('DOMContentLoaded', async () => {
+// Глобальная функция инициализации для SPA-роутера и обычного DOMContentLoaded
+async function initCatalogPage() {
     const urlParams = new URLSearchParams(window.location.search);
     const type = urlParams.get('type');
     const category = urlParams.get('category');
@@ -34,7 +35,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const popularContainer = document.getElementById('popular-products-grid');
     const saleContainer = document.getElementById('sale-products-grid');
 
-    // Делаем запрос к серверу, если мы либо на странице каталога, либо на главной
+    // Делаем запрос к серверу, если мы на странице каталога или на главной
     if ((gridElement && titleElement) || newContainer || popularContainer || saleContainer) {
         try {
             const response = await fetch(API_URL);
@@ -108,7 +109,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
     }
-});
+}
+
+// Привязываем к window, чтобы SPA-роутер гарантированно видел функцию
+window.initCatalogPage = initCatalogPage;
+
+// Первый запуск при полной загрузке HTML
+document.addEventListener('DOMContentLoaded', initCatalogPage);
 
 // Функция отрисовки для каталога (special.html)
 function renderProductGrid(productsList, container, currentType) {
@@ -164,7 +171,7 @@ function goToProduct(id) {
     window.location.href = `product.html?id=${id}`;
 }
 
-// Универсальная функция отрисовки карточки для главной страницы (index.html)
+// Функция отрисовки карточки для главной страницы (index.html)
 function renderCard(item, container, blockType) {
     const imgSrc = (item.img && (item.img.startsWith('http') || item.img.startsWith('/')))
         ? item.img
