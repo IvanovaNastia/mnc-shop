@@ -289,7 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // При клике на подсказку сразу переходим на карточку товара
             div.addEventListener('click', () => {
-                window.location.href = `product.html?id=${item.id}`;
+                goToProduct(item.id);
             });
 
             suggestionsContainer.appendChild(div);

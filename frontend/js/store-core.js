@@ -192,7 +192,7 @@ function renderCartPage() {
 
         const finalPrice = item.discount > 0 ? (item.price * (1 - item.discount / 100)) : item.price;
         return `
-            <div class="cart-card" onclick="window.location.href='product.html?id=${item.id}'">
+            <div class="cart-card" onclick="goToProduct(${item.id})">
                 <div class="cart-info">
                     <div class="cart-img">
                         <img src="${imgSrc}" alt="${item.title}">
@@ -259,7 +259,7 @@ function renderFavPage() {
 
         const finalPrice = item.discount > 0 ? (item.price * (1 - item.discount / 100)) : item.price;
         return `
-            <div class="fav-card" onclick="window.location.href='product.html?id=${item.id}'">
+            <div class="fav-card" onclick="goToProduct(${item.id})">
                 <div class="fav-info">
                     <div class="fav-img">
                         <img src="${imgSrc}" alt="${item.title}">
