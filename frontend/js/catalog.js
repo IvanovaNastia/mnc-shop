@@ -10,6 +10,11 @@ async function initCatalogPage() {
     const titleElement = document.getElementById('title');
     const gridElement = document.getElementById('product-grid');
 
+    // Находим контейнеры прямо в момент вызова функции (КРИТИЧНО ДЛЯ SPA)
+    const newContainer = document.getElementById('new-products-grid');
+    const popularContainer = document.getElementById('popular-products-grid');
+    const saleContainer = document.getElementById('sale-products-grid');
+
     // Настройка ссылок в каталоге
     const catalogLinks = document.querySelectorAll('.catalog-list a');
     catalogLinks.forEach(link => {
@@ -25,17 +30,15 @@ async function initCatalogPage() {
     const bannerBtn = document.querySelector('.banner-action-btn');
     if (bannerBtn) {
         bannerBtn.onclick = () => {
-            window.location.href = "special.html?type=all";
+            if (typeof window.spaNavigate === 'function') {
+                window.spaNavigate("special.html?type=all");
+            } else {
+                window.location.href = "special.html?type=all";
+            }
         };
     }
 
-    // --- ОБЩАЯ ЗАГРУЗКА ДАННЫХ ДЛЯ ВСЕХ СТРАНИЦ ---
-    // Определяем контейнеры главной страницы
-    const newContainer = document.getElementById('new-products-grid');
-    const popularContainer = document.getElementById('popular-products-grid');
-    const saleContainer = document.getElementById('sale-products-grid');
-
-    // Делаем запрос к серверу, если мы на странице каталога или на главной
+    // Загружаем товары, если есть хотя бы один нужный контейнер на текущей странице
     if ((gridElement && titleElement) || newContainer || popularContainer || saleContainer) {
         try {
             const response = await fetch(API_URL);
@@ -43,7 +46,7 @@ async function initCatalogPage() {
 
             const products = await response.json();
 
-            // Логика для страницы КАТАЛОГА (special.html)
+            // 1. Логика для страницы КАТАЛОГА (special.html)
             if (gridElement && titleElement) {
                 let filteredProducts = [];
                 let pageTitle = "Товари";
@@ -51,7 +54,6 @@ async function initCatalogPage() {
                 if (searchQuery) {
                     const query = searchQuery.trim().toLowerCase();
                     pageTitle = `Результати пошуку: "${searchQuery}"`;
-
                     filteredProducts = products.filter(p =>
                         (p.title && p.title.toLowerCase().includes(query)) ||
                         (p.description && p.description.toLowerCase().includes(query))
@@ -80,22 +82,19 @@ async function initCatalogPage() {
                 renderProductGrid(filteredProducts, gridElement, type);
             }
 
-            // Логика для ГЛАВНОЙ СТРАНИЦЫ (index.html)
-            // 1. Блок НОВИНКИ (Передаем третий параметр 'new')
+            // 2. Логика для ГЛАВНОЙ СТРАНИЦЫ (index.html)
             if (newContainer) {
                 newContainer.innerHTML = '';
                 const newProducts = products.filter(item => item.isNew).slice(0, 4);
                 newProducts.forEach(item => renderCard(item, newContainer, 'new'));
             }
 
-            // 2. Блок ПОПУЛЯРНОЕ (Передаем третий параметр 'popular')
             if (popularContainer) {
                 popularContainer.innerHTML = '';
                 const popularProducts = products.filter(item => item.isPopular).slice(0, 4);
                 popularProducts.forEach(item => renderCard(item, popularContainer, 'popular'));
             }
 
-            // 3. Блок СКИДКИ (Передаем третий параметр 'sale')
             if (saleContainer) {
                 saleContainer.innerHTML = '';
                 const saleProducts = products.filter(item => item.discount > 0).slice(0, 4);

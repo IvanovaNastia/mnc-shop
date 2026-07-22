@@ -20,7 +20,7 @@ async function navigateTo(url) {
         return;
     }
 
-    // Закрываем выпадающие меню шапки при переходе
+    // Закрываем меню
     document.querySelectorAll('.catalog-menu, .offers-menu').forEach(m => m.classList.remove('_active'));
 
     const currentHeight = contentArea.offsetHeight;
@@ -28,7 +28,7 @@ async function navigateTo(url) {
 
     try {
         const response = await fetch(url);
-        if (!response.ok) throw new Error('Помилка завантаження сторінки');
+        if (!response.ok) throw new Error('Помилка завантаження');
         const htmlText = await response.text();
         
         const parser = new DOMParser();
@@ -36,31 +36,29 @@ async function navigateTo(url) {
         
         const newContent = newDoc.getElementById('main-content');
         if (!newContent) {
-            throw new Error('На цільовій сторінці не знайдено #main-content');
+            throw new Error('Не знайдено #main-content');
         }
 
-        // 1. Обновляем URL в браузере ДО вызова функций отрисовки
+        // 1. Обновляем URL
         history.pushState(null, '', url);
         document.title = newDoc.title;
         window.scrollTo(0, 0);
 
-        // 2. Вставляем новый контент
+        // 2. Вставляем новый HTML
         contentArea.innerHTML = newContent.innerHTML;
 
-        // 3. Выполняем скрипты и переинициализацию
-        reinitializePageScripts();
+        // 3. Ждем 1 кадр рендера браузера, И ТОЛЬКО ПОТОМ запускаем скрипты!
+        requestAnimationFrame(() => {
+            reinitializePageScripts();
+        });
 
     } catch (error) {
         console.error("Помилка SPA:", error);
-        // В случае любой ошибки делаем обычный переход
         window.location.href = url;
     } finally {
-        // --- СНИМАЕМ БЛОКИРОВКУ ВЫСОТЫ ---
-        // Даем браузеру 50мс полностью завершить рендер новой страницы,
-        // после чего возвращаем автоматическую высоту
         setTimeout(() => {
             contentArea.style.minHeight = '';
-        }, 100);
+        }, 150);
     }
 }
 
