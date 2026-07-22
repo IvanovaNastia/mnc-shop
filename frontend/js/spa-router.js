@@ -21,8 +21,7 @@ async function navigateTo(url) {
         return;
     }
 
-    // --- БЛОКИРОВКА ДЁРГАНИЯ (Фиксируем текущую высоту) ---
-    // Узнаем текущую высоту контейнера в пикселях перед заменой
+    // Фиксируем высоту для защиты от скачков
     const currentHeight = contentArea.offsetHeight;
     // Временно жестко задаем эту высоту, чтобы страница не сжималась
     contentArea.style.minHeight = `${currentHeight}px`;
@@ -40,17 +39,23 @@ async function navigateTo(url) {
             throw new Error('На цільовій сторінці не знайдено #main-content');
         }
 
-        // Мгновенно заменяем контент
+        // 1. Вставляем новый HTML
         contentArea.innerHTML = newContent.innerHTML;
         
+        // 2. Обновляем адресную строку и заголовок
         history.pushState(null, '', url);
         document.title = newDoc.title;
         window.scrollTo(0, 0);
 
+        // 3. Выполняем Inline-скрипты и подгружаем недостающие <script> с новой страницы
+        executeScriptsFromNewPage(newDoc);
+
+        // 4. Запускаем инициализацию логики каталога и корзины
         reinitializePageScripts();
 
     } catch (error) {
         console.error("Помилка SPA:", error);
+        // В случае любой ошибки делаем обычный переход
         window.location.href = url;
     } finally {
         // --- СНИМАЕМ БЛОКИРОВКУ ВЫСОТЫ ---
@@ -58,7 +63,7 @@ async function navigateTo(url) {
         // после чего возвращаем автоматическую высоту
         setTimeout(() => {
             contentArea.style.minHeight = '';
-        }, 50);
+        }, 100);
     }
 }
 
@@ -66,23 +71,35 @@ window.addEventListener('popstate', async () => {
     await navigateTo(window.location.href);
 });
 
+// Функция для выполнения скриптов, которые были на подгруженной странице
+function executeScriptsFromNewPage(newDoc) {
+    const scripts = newDoc.querySelectorAll('script');
+    scripts.forEach(oldScript => {
+        const newScript = document.createElement('script');
+        Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+        newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+        document.body.appendChild(newScript);
+        newScript.remove(); // Удаляем тег из DOM после выполнения
+    });
+}
+
 function reinitializePageScripts() {
-    // Инициализация каталога и главной страницы
+    // Явно вызываем рендер каталога / товаров на главной
     if (typeof window.initCatalogPage === 'function') {
         window.initCatalogPage();
     }
     
-    // Инициализация корзины, избранного и отдельного товара (из cart.js)
+    // Вызываем функции для работы с корзиной и отдельными товарами (если они загружены)
     if (typeof updateHeaderCounters === 'function') {
         updateHeaderCounters();
     }
-    if (window.location.pathname.includes('product.html') && typeof renderSingleProductPage === 'function') {
-        renderSingleProductPage();
+    if (window.location.pathname.includes('product.html') && typeof window.renderSingleProductPage === 'function') {
+        window.renderSingleProductPage();
     }
-    if ((document.querySelector('.cart-menu') || document.getElementById('shop_cart')) && typeof renderCartPage === 'function') {
-        renderCartPage();
+    if ((document.querySelector('.cart-menu') || document.getElementById('shop_cart')) && typeof window.renderCartPage === 'function') {
+        window.renderCartPage();
     }
-    if ((document.querySelector('.fav-menu') || document.getElementById('favourite')) && typeof renderFavPage === 'function') {
-        renderFavPage();
+    if ((document.querySelector('.fav-menu') || document.getElementById('favourite')) && typeof window.renderFavPage === 'function') {
+        window.renderFavPage();
     }
 }
