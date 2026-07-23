@@ -90,6 +90,13 @@ async function initCatalogPage() {
                 const saleProducts = products.filter(item => item.discount > 0).slice(0, 4);
                 saleProducts.forEach(item => renderCard(item, saleContainer, 'sale'));
             }
+
+            // ДОБАВЛЯЕМ ЭТУ СТРОКУ: Переинициализируем Swiper ПОСЛЕ отрисовки карточек
+            if (typeof window.initSwiper === 'function') {
+                setTimeout(() => {
+                    window.initSwiper();
+                }, 50);
+            }
         }
 
     } catch (error) {

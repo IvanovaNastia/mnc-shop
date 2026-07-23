@@ -1,19 +1,21 @@
 function initAccordions() {
   const accordions = document.querySelectorAll('.accordion-item');
+  if (!accordions.length) return;
 
   accordions.forEach(item => {
     const trigger = item.querySelector('.accordion-trigger');
     const content = item.querySelector('.accordion-content');
-    
+
     if (!trigger || !content) return;
 
-    // Клонируем элемент trigger, чтобы на 100% очистить любые старые addEventListener
+    // Сбрасываем старый слушатель через замену (чистый подход)
     const newTrigger = trigger.cloneNode(true);
     trigger.parentNode.replaceChild(newTrigger, trigger);
 
-    newTrigger.addEventListener('click', () => {
+    newTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
       const isActive = item.classList.toggle('active');
-      
+
       if (isActive) {
         content.style.maxHeight = content.scrollHeight + 'px';
         setTimeout(() => {
@@ -22,7 +24,7 @@ function initAccordions() {
           }
         }, 300);
       } else {
-        // Задаем явную высоту перед сбросом в 0, чтобы сработала CSS-анимация
+        // Задаем текущую высоту, чтобы анимация свернулась плавно
         content.style.maxHeight = content.scrollHeight + 'px';
         requestAnimationFrame(() => {
           content.style.maxHeight = '0px';
@@ -34,5 +36,8 @@ function initAccordions() {
 
 window.initAccordions = initAccordions;
 
-// Запуск при обычной первой загрузке
-document.addEventListener('DOMContentLoaded', initAccordions);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initAccordions);
+} else {
+  initAccordions();
+}

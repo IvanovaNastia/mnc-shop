@@ -76,12 +76,12 @@ window.addEventListener('popstate', () => {
 function reinitializePageScripts() {
     console.log("👉 Запуск reinitializePageScripts");
 
-    // 1. Счетчики
+    // 1. Счетчики хедера
     try {
         if (typeof window.updateHeaderCounters === 'function') window.updateHeaderCounters();
     } catch (e) { console.error("Ошибка в updateHeaderCounters:", e); }
 
-    // 2. Каталог и Главная
+    // 2. Каталог и Главная (он сам внутри вызовет Swiper после рендера)
     try {
         if (typeof window.initCatalogPage === 'function') window.initCatalogPage();
     } catch (e) { console.error("Ошибка в initCatalogPage:", e); }
@@ -99,17 +99,12 @@ function reinitializePageScripts() {
         if (typeof window.renderFavPage === 'function') window.renderFavPage();
     } catch (e) { console.error("Ошибка в renderCartPage/FavPage:", e); }
 
-    // 5. Слайдер (Swiper)
-    try {
-        if (typeof window.initSwiper === 'function') window.initSwiper();
-    } catch (e) { console.error("Ошибка в initSwiper:", e); }
-
-    // 6. Аккордеон
+    // 5. Аккордеон
     try {
         if (typeof window.initAccordions === 'function') window.initAccordions();
     } catch (e) { console.error("Ошибка в initAccordions:", e); }
 
-    // 7. Выпадающее меню хедера
+    // 6. Выпадающее меню хедера
     try {
         if (typeof window.initHeaderMenus === 'function') window.initHeaderMenus();
     } catch (e) { console.error("Ошибка в initHeaderMenus:", e); }
