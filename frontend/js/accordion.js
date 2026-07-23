@@ -7,7 +7,7 @@ function initAccordions() {
     
     if (!trigger || !content) return;
 
-    // Предотвращаем дублирование обработчиков
+    // Очищаем старый обработчик перед навешиванием нового при SPA-переходе
     if (trigger.dataset.accordionInited) return;
     trigger.dataset.accordionInited = "true";
 

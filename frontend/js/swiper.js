@@ -2,9 +2,19 @@ function initSwiper() {
   const swiperElem = document.querySelector('.swiper');
   if (!swiperElem) return;
 
+  // Проверяем, подключена ли сама библиотека Swiper на странице
+  if (typeof Swiper === 'undefined') {
+    console.warn("Библиотека Swiper не загружена на странице");
+    return;
+  }
+
   // Если прошлый экземпляр Swiper существовал, уничтожаем его перед повторной инициализацией
   if (window.mySwiperInstance) {
-    window.mySwiperInstance.destroy(true, true);
+    try {
+      window.mySwiperInstance.destroy(true, true);
+    } catch (e) {
+      console.error("Ошибка при уничтожении предыдущего Swiper:", e);
+    }
   }
 
   window.mySwiperInstance = new Swiper('.swiper', {
@@ -37,6 +47,6 @@ function initSwiper() {
   });
 }
 
-// Привязываем к window для SPA и запускаем при первой загрузке
+// Привязываем к window для доступа из SPA-роутера и запускаем при первой загрузке страницы
 window.initSwiper = initSwiper;
 document.addEventListener('DOMContentLoaded', initSwiper);
