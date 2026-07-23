@@ -7,8 +7,8 @@ function initAccordions() {
     
     if (!trigger || !content) return;
 
-    // Очищаем старый обработчик перед навешиванием нового при SPA-переходе
-    if (trigger.dataset.accordionInited) return;
+    // Проверяем, был ли уже повешен клик
+    if (trigger.dataset.accordionInited === "true") return;
     trigger.dataset.accordionInited = "true";
 
     trigger.addEventListener('click', () => {
@@ -31,6 +31,5 @@ function initAccordions() {
   });
 }
 
-// Привязываем к window для SPA и запускаем при первой загрузке
 window.initAccordions = initAccordions;
 document.addEventListener('DOMContentLoaded', initAccordions);

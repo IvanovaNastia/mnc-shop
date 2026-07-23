@@ -173,17 +173,17 @@ async function renderSingleProductPage() {
 // КОРЗИНА (КЛИК ПО ВСЕМУ БОКСУ)
 function renderCartPage() {
     const cartMenu = document.querySelector('.cart-menu');
-    const asideContainer = document.querySelector('.aside-menu');
+    const asideMenu = document.querySelector('.aside-menu');
 
     if (!cartMenu) return;
 
     if (cart.length === 0) {
         cartMenu.innerHTML = '<div class="empty-message">Ваш кошик порожній</div>';
-        if (asideContainer) asideContainer.style.display = 'none';
+        if (asideMenu) asideMenu.style.display = 'none';
         return;
     }
 
-    if (asideContainer) asideContainer.style.display = 'block';
+    if (asideMenu) asideMenu.style.display = 'block';
 
     cartMenu.innerHTML = cart.map(item => {
         const imgSrc = (item.img && (item.img.startsWith('http') || item.img.startsWith('/')))
@@ -217,8 +217,8 @@ function renderCartPage() {
         return sum + (finalPrice * item.quantity);
     }, 0);
 
-    if (asideContainer) {
-        asideContainer.innerHTML = `
+    if (asideMenu) {
+        asideMenu.innerHTML = `
             <div class="aside-container">
                 <h2 class="aside-title">Підсумок замовлення</h2>
                 <div class="aside-info">
