@@ -1,11 +1,4 @@
-// 1. Проверяем, реагирует ли роутер ХОТЯ БЫ НА ЧТО-ТО при клике
-document.addEventListener('click', (e) => {
-    const link = e.target.closest('a');
-    if (link) {
-        console.log("🔥 КЛИК ПО ССЫЛКЕ:", link.getAttribute('href'), "Полный URL:", link.href);
-    }
-}, true); // UseCapture: перехватываем клик ДО того, как его кто-то заблокирует
-
+// 1. Отслеживание кликов по ссылкам
 document.addEventListener('click', async (e) => {
     const link = e.target.closest('a');
     
@@ -30,7 +23,7 @@ async function navigateTo(url) {
         return;
     }
 
-    // Закрываем выпадающие меню
+    // Закрываем выпадающие меню хедера
     document.querySelectorAll('.catalog-menu, .offers-menu').forEach(m => m.classList.remove('_active'));
 
     try {
@@ -48,16 +41,30 @@ async function navigateTo(url) {
             return;
         }
 
-        // 1. Меняем URL в строке браузера
+        // 1. Обновляем URL и заголовок
         history.pushState(null, '', url);
         document.title = newDoc.title;
-        window.scrollTo(0, 0);
 
-        // 2. Вставляем новый HTML
+        // 2. Вставляем только контент <main>
         contentArea.innerHTML = newContent.innerHTML;
 
-        // 3. Вызываем переинициализацию скриптов
+        // 3. Переинициализируем скрипты страницы
         reinitializePageScripts();
+
+        // 4. Логика скролла: к якорю (#pay, #return и т.д.) или наверх
+        const hash = window.location.hash;
+        if (hash) {
+            setTimeout(() => {
+                const targetElem = document.querySelector(hash);
+                if (targetElem) {
+                    targetElem.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    window.scrollTo(0, 0);
+                }
+            }, 150);
+        } else {
+            window.scrollTo(0, 0);
+        }
 
     } catch (error) {
         console.error("Помилка SPA:", error);
@@ -70,7 +77,20 @@ window.spaNavigate = navigateTo;
 
 // Обработка кнопок «Назад / Вперед» в браузере
 window.addEventListener('popstate', () => {
-    reinitializePageScripts();
+    const contentArea = document.getElementById('main-content');
+    if (contentArea) {
+        fetch(window.location.href)
+            .then(res => res.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const newDoc = parser.parseFromString(html, 'text/html');
+                const newContent = newDoc.getElementById('main-content');
+                if (newContent) contentArea.innerHTML = newContent.innerHTML;
+                reinitializePageScripts();
+            });
+    } else {
+        reinitializePageScripts();
+    }
 });
 
 function reinitializePageScripts() {
@@ -81,30 +101,37 @@ function reinitializePageScripts() {
         if (typeof window.updateHeaderCounters === 'function') window.updateHeaderCounters();
     } catch (e) { console.error("Ошибка в updateHeaderCounters:", e); }
 
-    // 2. Каталог и Главная (он сам внутри вызовет Swiper после рендера)
+    // 2. Аккордеон (запускается первым для гарантированной работы на странице info.html)
+    try {
+        if (typeof window.initAccordions === 'function') window.initAccordions();
+    } catch (e) { console.error("Ошибка в initAccordions:", e); }
+
+    // 3. Каталог и Главная
     try {
         if (typeof window.initCatalogPage === 'function') window.initCatalogPage();
     } catch (e) { console.error("Ошибка в initCatalogPage:", e); }
 
-    // 3. Отдельная страница товара
+    // 4. Страница товара
     try {
         if (window.location.pathname.includes('product.html') && typeof window.renderSingleProductPage === 'function') {
             window.renderSingleProductPage();
         }
     } catch (e) { console.error("Ошибка в renderSingleProductPage:", e); }
 
-    // 4. Корзина и Избранное
+    // 5. Корзина и Избранное
     try {
         if (typeof window.renderCartPage === 'function') window.renderCartPage();
         if (typeof window.renderFavPage === 'function') window.renderFavPage();
     } catch (e) { console.error("Ошибка в renderCartPage/FavPage:", e); }
 
-    // 5. Аккордеон
+    // 6. Слайдер Swiper (безопасный вызов ТОЛЬКО если есть элемент .swiper)
     try {
-        if (typeof window.initAccordions === 'function') window.initAccordions();
-    } catch (e) { console.error("Ошибка в initAccordions:", e); }
+        if (document.querySelector('.swiper') && typeof window.initSwiper === 'function') {
+            window.initSwiper();
+        }
+    } catch (e) { console.error("Ошибка в initSwiper:", e); }
 
-    // 6. Выпадающее меню хедера
+    // 7. Выпадающее меню хедера
     try {
         if (typeof window.initHeaderMenus === 'function') window.initHeaderMenus();
     } catch (e) { console.error("Ошибка в initHeaderMenus:", e); }
