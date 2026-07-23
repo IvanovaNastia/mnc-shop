@@ -7,15 +7,11 @@ function initAccordions() {
     
     if (!trigger || !content) return;
 
-    // Снимаем старый флаг, если элемент был перезагружен через SPA
-    if (!document.body.contains(trigger)) return;
+    // Клонируем элемент trigger, чтобы на 100% очистить любые старые addEventListener
+    const newTrigger = trigger.cloneNode(true);
+    trigger.parentNode.replaceChild(newTrigger, trigger);
 
-    // Удаляем прошлый обработчик, чтобы не плодить дубли
-    if (trigger._accordionHandler) {
-      trigger.removeEventListener('click', trigger._accordionHandler);
-    }
-
-    const clickHandler = () => {
+    newTrigger.addEventListener('click', () => {
       const isActive = item.classList.toggle('active');
       
       if (isActive) {
@@ -26,17 +22,17 @@ function initAccordions() {
           }
         }, 300);
       } else {
+        // Задаем явную высоту перед сбросом в 0, чтобы сработала CSS-анимация
         content.style.maxHeight = content.scrollHeight + 'px';
         requestAnimationFrame(() => {
           content.style.maxHeight = '0px';
         });
       }
-    };
-
-    trigger._accordionHandler = clickHandler;
-    trigger.addEventListener('click', clickHandler);
+    });
   });
 }
 
 window.initAccordions = initAccordions;
+
+// Запуск при обычной первой загрузке
 document.addEventListener('DOMContentLoaded', initAccordions);

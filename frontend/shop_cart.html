@@ -175,6 +175,45 @@
                 </div>
             </div>
         </div>
+
+        <!-- Модальное окно заказа -->
+        <div id="orderModal" class="modal">
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <h2>Оформлення замовлення</h2>
+                <!-- Добавили атрибут novalidate, чтобы отключить стандартные пузыри браузера -->
+                <form id="orderForm" novalidate>
+                    <div class="form-group">
+                        <label for="userName">ПІБ:</label>
+                        <input type="text" id="userName" required placeholder="Прізвище Ім'я По батькові">
+                        <span class="error-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="userEmail">Електронна пошта:</label>
+                        <input type="email" id="userEmail" required placeholder="example@mail.com">
+                        <span class="error-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="userPhone">Номер телефону:</label>
+                        <input type="tel" id="userPhone" required placeholder="+380XXXXXXXXX">
+                        <span class="error-message"></span>
+                    </div>
+
+                    <button type="submit" class="aside-btn">Підтвердити замовлення</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="successModal" class="modal">
+            <div class="modal-content">
+                <div>✓</div>
+                <h2>Дякуємо!</h2>
+                <p>Ваше замовлення успішно прийнято.</p>
+                <button type="button" id="successCloseBtn" class="aside-btn">ОК</button>
+            </div>
+        </div>
     </main>
 
     <footer id="footer">
@@ -238,9 +277,12 @@
             <div class="footer-soc-block">
                 <h3 class="footer-soc-title">Ми в соцмережах</h3>
                 <div class="footer-soc-icon">
-                    <a href="https://www.instagram.com/mnc_pokrov?igsh=bTFyNWR4c3MwcXBx&utm_source=qr" target="_blank" rel="noopener noreferrer"><img src="img/soc_media/instagram.svg" alt=""></a>
-                    <a href="https://www.tiktok.com/@mnc_pokrov" target="_blank" rel="noopener noreferrer"><img src="img/soc_media/tiktok.svg" alt=""></a>
-                    <a href="https://www.facebook.com/share/1AGCzApT2h/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer"><img src="img/soc_media/facebook.svg" alt=""></a>
+                    <a href="https://www.instagram.com/mnc_pokrov?igsh=bTFyNWR4c3MwcXBx&utm_source=qr" target="_blank"
+                        rel="noopener noreferrer"><img src="img/soc_media/instagram.svg" alt=""></a>
+                    <a href="https://www.tiktok.com/@mnc_pokrov" target="_blank" rel="noopener noreferrer"><img
+                            src="img/soc_media/tiktok.svg" alt=""></a>
+                    <a href="https://www.facebook.com/share/1AGCzApT2h/?mibextid=wwXIfr" target="_blank"
+                        rel="noopener noreferrer"><img src="img/soc_media/facebook.svg" alt=""></a>
                 </div>
             </div>
         </div>
@@ -249,49 +291,11 @@
     <section id="bottom">
         <div class="container bottom-container">
             <div class="bottom-fop">ФОП Александрова Аліса Олегівна, ІПН 3335907148</div>
-            <div class="bottom-link"><a href="polity.html">Політика конфіденційності</a> | <a href="terms.html">Умови використання сайту</a>
+            <div class="bottom-link"><a href="polity.html">Політика конфіденційності</a> | <a href="terms.html">Умови
+                    використання сайту</a>
             </div>
         </div>
     </section>
-
-    <!-- Модальное окно заказа -->
-    <div id="orderModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <h2>Оформлення замовлення</h2>
-            <!-- Добавили атрибут novalidate, чтобы отключить стандартные пузыри браузера -->
-            <form id="orderForm" novalidate>
-                <div class="form-group">
-                    <label for="userName">ПІБ:</label>
-                    <input type="text" id="userName" required placeholder="Прізвище Ім'я По батькові">
-                    <span class="error-message"></span>
-                </div>
-
-                <div class="form-group">
-                    <label for="userEmail">Електронна пошта:</label>
-                    <input type="email" id="userEmail" required placeholder="example@mail.com">
-                    <span class="error-message"></span>
-                </div>
-
-                <div class="form-group">
-                    <label for="userPhone">Номер телефону:</label>
-                    <input type="tel" id="userPhone" required placeholder="+380XXXXXXXXX">
-                    <span class="error-message"></span>
-                </div>
-
-                <button type="submit" class="aside-btn">Підтвердити замовлення</button>
-            </form>
-        </div>
-    </div>
-
-    <div id="successModal" class="modal">
-        <div class="modal-content">
-            <div>✓</div>
-            <h2>Дякуємо!</h2>
-            <p>Ваше замовлення успішно прийнято.</p>
-            <button type="button" id="successCloseBtn" class="aside-btn">ОК</button>
-        </div>
-    </div>
 
     <script src="js/droped-menu.js"></script>
     <script src="js/catalog.js"></script>
