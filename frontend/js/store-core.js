@@ -298,44 +298,21 @@ window.moveFromFavToCart = function (id) {
 };
 
 
-// --- ЛОГИКА ОТКРЫТИЯ МОДАЛЬНЫХ ОКОН ---
-// Используем делегирование кликов, чтобы кнопка "Оформити заказ" работала всегда,
-// даже после того, как корзина полностью перерисовывается.
+// --- ЛОГИКА ОТКРЫТИЯ И ВАЛИДАЦИИ МОДАЛЬНЫХ ОКОН ---
 document.addEventListener('click', (e) => {
     const orderModal = document.getElementById('orderModal');
     const successModal = document.getElementById('successModal');
-
-    // Клик по кнопке "Оформити заказ"
-    if (e.target && e.target.id === 'checkout-btn') {
-        orderModal.style.display = 'flex';
-    }
-
-    if (e.target && e.target.classList.contains('close-modal')) {
-        orderModal.style.display = 'none';
-    }
-
-    // Клик по кнопке "ОК" в окне успешного заказа
-    if (e.target && e.target.id === 'successCloseBtn') {
-        successModal.style.display = 'none';
-        renderCartPage();
-    }
-});
-
-// --- ЛОГИКА ОТКРЫТИЯ МОДАЛЬНЫХ ОКОН ---
-// Используем делегирование кликов с проверкой на существование элементов
-document.addEventListener('click', (e) => {
-    const orderModal = document.getElementById('orderModal');
-    const successModal = document.getElementById('successModal');
-
+    
     // Клик по кнопке "Оформити заказ"
     if (e.target && e.target.id === 'checkout-btn') {
         if (orderModal) {
             orderModal.style.display = 'flex';
         } else {
-            console.error("Ошибка: элемент #orderModal не найден на этой странице.");
+            console.error("Помилка: елемент #orderModal не знайдено на цій сторінці.");
         }
     }
 
+    // Закрытие крестиком
     if (e.target && e.target.classList.contains('close-modal')) {
         if (orderModal) orderModal.style.display = 'none';
         if (successModal) successModal.style.display = 'none';
@@ -382,7 +359,6 @@ document.addEventListener('submit', function (e) {
             group.classList.remove('has-error');
         }
 
-        // Валидация
         clearError(nameInput);
         const nameValue = nameInput.value.trim();
         if (!nameValue || nameValue.length < 3) {
@@ -438,7 +414,7 @@ document.addEventListener('submit', function (e) {
                 }
             })
             .catch(error => {
-                console.error("Помилка при отправці:", error);
+                console.error("Помилка при відправці:", error);
                 alert("Не вдалося відправити замовлення.");
             });
 
