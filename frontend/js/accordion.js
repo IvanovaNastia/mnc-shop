@@ -7,11 +7,15 @@ function initAccordions() {
     
     if (!trigger || !content) return;
 
-    // Проверяем, был ли уже повешен клик
-    if (trigger.dataset.accordionInited === "true") return;
-    trigger.dataset.accordionInited = "true";
+    // Снимаем старый флаг, если элемент был перезагружен через SPA
+    if (!document.body.contains(trigger)) return;
 
-    trigger.addEventListener('click', () => {
+    // Удаляем прошлый обработчик, чтобы не плодить дубли
+    if (trigger._accordionHandler) {
+      trigger.removeEventListener('click', trigger._accordionHandler);
+    }
+
+    const clickHandler = () => {
       const isActive = item.classList.toggle('active');
       
       if (isActive) {
@@ -27,7 +31,10 @@ function initAccordions() {
           content.style.maxHeight = '0px';
         });
       }
-    });
+    };
+
+    trigger._accordionHandler = clickHandler;
+    trigger.addEventListener('click', clickHandler);
   });
 }
 

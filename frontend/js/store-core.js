@@ -321,6 +321,33 @@ document.addEventListener('click', (e) => {
     }
 });
 
+// --- ЛОГИКА ОТКРЫТИЯ МОДАЛЬНЫХ ОКОН ---
+// Используем делегирование кликов с проверкой на существование элементов
+document.addEventListener('click', (e) => {
+    const orderModal = document.getElementById('orderModal');
+    const successModal = document.getElementById('successModal');
+
+    // Клик по кнопке "Оформити заказ"
+    if (e.target && e.target.id === 'checkout-btn') {
+        if (orderModal) {
+            orderModal.style.display = 'flex';
+        } else {
+            console.error("Ошибка: элемент #orderModal не найден на этой странице.");
+        }
+    }
+
+    if (e.target && e.target.classList.contains('close-modal')) {
+        if (orderModal) orderModal.style.display = 'none';
+        if (successModal) successModal.style.display = 'none';
+    }
+
+    // Клик по кнопке "ОК" в окне успешного заказа
+    if (e.target && e.target.id === 'successCloseBtn') {
+        if (successModal) successModal.style.display = 'none';
+        renderCartPage();
+    }
+});
+
 document.addEventListener('submit', function (e) {
     const orderModal = document.getElementById('orderModal');
 
@@ -376,7 +403,6 @@ document.addEventListener('submit', function (e) {
 
         if (!isValid) return false;
 
-        // Берём данные напрямую из localStorage, чтобы не трогать глобальный массив cart напрямую
         const itemsToSend = JSON.parse(localStorage.getItem('shop_cart')) || [];
 
         const orderData = {
@@ -420,7 +446,7 @@ document.addEventListener('submit', function (e) {
     }
 });
 
-// Привязываем функции к window, чтобы SPA-роутер мог вызывать их при смене страниц
+// Привязываем функции к window
 window.updateHeaderCounters = updateHeaderCounters;
 window.renderSingleProductPage = renderSingleProductPage;
 window.renderCartPage = renderCartPage;
