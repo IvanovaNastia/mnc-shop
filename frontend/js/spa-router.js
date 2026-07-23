@@ -124,10 +124,12 @@ function reinitializePageScripts() {
         if (typeof window.renderFavPage === 'function') window.renderFavPage();
     } catch (e) { console.error("Ошибка в renderCartPage/FavPage:", e); }
 
-    // 6. Слайдер Swiper (безопасный вызов ТОЛЬКО если есть элемент .swiper)
+    // 6. Слайдер Swiper — переносим вызов с небольшой задержкой на случай, если карточки уже были в DOM
     try {
         if (document.querySelector('.swiper') && typeof window.initSwiper === 'function') {
-            window.initSwiper();
+            setTimeout(() => {
+                window.initSwiper();
+            }, 150);
         }
     } catch (e) { console.error("Ошибка в initSwiper:", e); }
 

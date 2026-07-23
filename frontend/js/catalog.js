@@ -91,9 +91,11 @@ async function initCatalogPage() {
                 saleProducts.forEach(item => renderCard(item, saleContainer, 'sale'));
             }
 
-            // Вызываем Swiper строго после отрисовки главной, если есть элемент .swiper
-            if (document.querySelector('.swiper') && typeof window.initSwiper === 'function') {
-                window.initSwiper();
+            // 👇 ИНИЦИАЛИЗИРУЕМ СВАЙПЕР ТОЛЬКО ТУТ (когда карточки уже 100% в DOM)
+            if (typeof window.initSwiper === 'function') {
+                setTimeout(() => {
+                    window.initSwiper();
+                }, 100);
             }
         }
 
