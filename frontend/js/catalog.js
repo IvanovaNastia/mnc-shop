@@ -1,12 +1,21 @@
 const API_URL = 'https://mnc-backend.onrender.com/api/products';
 const BACKEND_URL = 'https://mnc-backend.onrender.com';
 
-// Универсальная функция для формирования полного пути к картинке
 function getImageUrl(path) {
-    if (!path) return 'img/no-image.png';
-    if (path.startsWith('http://') || path.startsWith('https://')) return path;
-    if (path.startsWith('/uploads/')) return `${BACKEND_URL}${path}`;
-    if (path.startsWith('uploads/')) return `${BACKEND_URL}/${path}`;
+    if (!path) return 'img/no-image.png'; // Заглушка, если путь отсутствует
+    // Если путь начинается с http/https (полный URL)
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+        return path;
+    }
+    // Если путь загруженного файла с админки (начинается с /uploads/)
+    if (path.startsWith('/uploads/')) {
+        return `${BACKEND_URL}${path}`;
+    }
+    // Если путь относительный без слэша в начале (например, uploads/aaa.webp)
+    if (path.startsWith('uploads/')) {
+        return `${BACKEND_URL}/${path}`;
+    }
+    // Для статических картинок проекта из папки img/
     return path.startsWith('/') ? path : `/${path}`;
 }
 
@@ -19,6 +28,7 @@ async function initCatalogPage() {
     const category = urlParams.get('category');
     const searchQuery = urlParams.get('search');
 
+    // Ищем элементы Каждый РАЗ заново в обновленном DOM
     const titleElement = document.getElementById('title');
     const gridElement = document.getElementById('product-grid');
 
@@ -100,6 +110,7 @@ async function initCatalogPage() {
                 saleProducts.forEach(item => renderCard(item, saleContainer, 'sale'));
             }
 
+            // 👇 ИНИЦИАЛИЗИРУЕМ СВАЙПЕР ТОЛЬКО ТУТ (когда карточки уже 100% в DOM)
             if (typeof window.initSwiper === 'function') {
                 setTimeout(() => {
                     window.initSwiper();

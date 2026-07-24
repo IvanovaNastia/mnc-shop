@@ -2,13 +2,28 @@ const ORDERS_API_URL = 'https://mnc-backend.onrender.com/api/orders';
 const BACKEND_URL = 'https://mnc-backend.onrender.com';
 
 function getImageUrl(path) {
-    if (!path) return 'img/no-image.png';
-    if (path.startsWith('http://') || path.startsWith('https://')) return path;
-    if (path.startsWith('/uploads/')) return `${BACKEND_URL}${path}`;
-    if (path.startsWith('uploads/')) return `${BACKEND_URL}/${path}`;
+    if (!path) return 'img/no-image.png'; // Заглушка, если путь отсутствует
+    
+    // Если путь начинается с http/https (полный URL)
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+        return path;
+    }
+    
+    // Если путь загруженного файла с админки (начинается с /uploads/)
+    if (path.startsWith('/uploads/')) {
+        return `${BACKEND_URL}${path}`;
+    }
+    
+    // Если путь относительный без слэша в начале (например, uploads/aaa.webp)
+    if (path.startsWith('uploads/')) {
+        return `${BACKEND_URL}/${path}`;
+    }
+    
+    // Для статических картинок проекта из папки img/
     return path.startsWith('/') ? path : `/${path}`;
 }
 
+// Проверяем авторизацию при загрузке страницы
 const adminPassword = localStorage.getItem('admin_password');
 if (!adminPassword) {
     window.location.href = 'login.html';
@@ -25,11 +40,13 @@ function logout() {
 
 document.addEventListener('DOMContentLoaded', loadAdminOrders);
 
+// 1. Загрузка заказов
 async function loadAdminOrders() {
     try {
         const response = await fetch(ORDERS_API_URL, {
             method: 'GET',
             headers: {
+                // Кодируем пароль, чтобы не было ошибки ISO-8859-1
                 'X-Admin-Password': encodeURIComponent(adminPassword || '')
             }
         });
@@ -120,6 +137,7 @@ function renderOrdersTable(orders) {
     }).join('');
 }
 
+// 2. Смена статуса
 async function changeOrderStatus(orderId, newStatus) {
     try {
         const response = await fetch(`${ORDERS_API_URL}/${orderId}/status`, {
@@ -149,6 +167,7 @@ async function changeOrderStatus(orderId, newStatus) {
     }
 }
 
+// 3. Удаление заказа
 async function deleteOrder(id) {
     const isConfirmed = confirm(`Ви впевнені, що хочете видалити замовлення №${id}?`);
     if (!isConfirmed) return;
