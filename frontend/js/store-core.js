@@ -1,4 +1,13 @@
 const CORE_API_URL = 'https://mnc-backend.onrender.com/api/products';
+const BACKEND_URL = 'https://mnc-backend.onrender.com';
+
+function getImageUrl(path) {
+    if (!path) return 'img/no-image.png';
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    if (path.startsWith('/uploads/')) return `${BACKEND_URL}${path}`;
+    if (path.startsWith('uploads/')) return `${BACKEND_URL}/${path}`;
+    return path.startsWith('/') ? path : `/${path}`;
+}
 
 let cart = JSON.parse(localStorage.getItem('shop_cart')) || [];
 let favourite = JSON.parse(localStorage.getItem('favourite')) || [];
@@ -23,7 +32,6 @@ function updateHeaderCounters() {
     const favBadge = document.getElementById('fav-counter-badge');
     const cartBadge = document.getElementById('cart-counter-badge');
 
-    // 1. Обновление счетчика Избранного
     if (favBadge) {
         const favCount = favourite.length;
         if (favCount > 0) {
@@ -34,7 +42,6 @@ function updateHeaderCounters() {
         }
     }
 
-    // 2. Обновление счетчика Корзины
     if (cartBadge) {
         const cartCount = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
         if (cartCount > 0) {
@@ -88,7 +95,6 @@ window.addToFav = async function (id) {
     }
 };
 
-// ОТОБРАЖЕНИЕ СТРАНИЦЫ ОДНОГО ТОВАРА (Загрузка описания и характеристик из JSON бэкенда)
 async function renderSingleProductPage() {
     const urlParams = new URLSearchParams(window.location.search);
     const productId = parseInt(urlParams.get('id'));
@@ -101,9 +107,7 @@ async function renderSingleProductPage() {
 
         if (!product) return;
 
-        const imgSrc = (product.img && (product.img.startsWith('http') || product.img.startsWith('/')))
-            ? product.img
-            : `/${product.img || ''}`;
+        const imgSrc = getImageUrl(product.img);
 
         const productShow = document.querySelector('.product-show');
         const productDescr = document.querySelector('.product-descr');
@@ -138,7 +142,6 @@ async function renderSingleProductPage() {
         if (productDescr) {
             const descriptionText = product.description || "Опис товару найближчим часом з'явиться на сайті.";
 
-            // Рендеринг объекта характеристик (specs) из вашего .json файла
             let specsHTML = "";
             if (product.specs && Object.keys(product.specs).length > 0) {
                 specsHTML = "<ul>";
@@ -170,7 +173,6 @@ async function renderSingleProductPage() {
     }
 }
 
-// КОРЗИНА (КЛИК ПО ВСЕМУ БОКСУ)
 function renderCartPage() {
     const cartMenu = document.querySelector('.cart-menu');
     const asideMenu = document.querySelector('.aside-menu');
@@ -186,9 +188,7 @@ function renderCartPage() {
     if (asideMenu) asideMenu.style.display = 'block';
 
     cartMenu.innerHTML = cart.map(item => {
-        const imgSrc = (item.img && (item.img.startsWith('http') || item.img.startsWith('/')))
-            ? item.img
-            : `/${item.img || ''}`;
+        const imgSrc = getImageUrl(item.img);
 
         const finalPrice = item.discount > 0 ? (item.price * (1 - item.discount / 100)) : item.price;
         return `
@@ -242,7 +242,6 @@ window.removeFromCart = function (id) {
     updateHeaderCounters();
 };
 
-// ИЗБРАННОЕ (КЛИК ПО ВСЕМУ БОКСУ)
 function renderFavPage() {
     const favMenu = document.querySelector('.fav-menu');
     if (!favMenu) return;
@@ -253,9 +252,7 @@ function renderFavPage() {
     }
 
     favMenu.innerHTML = favourite.map(item => {
-        const imgSrc = (item.img && (item.img.startsWith('http') || item.img.startsWith('/')))
-            ? item.img
-            : `/${item.img || ''}`;
+        const imgSrc = getImageUrl(item.img);
 
         const finalPrice = item.discount > 0 ? (item.price * (1 - item.discount / 100)) : item.price;
         return `
@@ -297,13 +294,10 @@ window.moveFromFavToCart = function (id) {
     updateHeaderCounters();
 };
 
-
-// --- ЛОГИКА ОТКРЫТИЯ И ВАЛИДАЦИИ МОДАЛЬНЫХ ОКОН ---
 document.addEventListener('click', (e) => {
     const orderModal = document.getElementById('orderModal');
     const successModal = document.getElementById('successModal');
     
-    // Клик по кнопке "Оформити заказ"
     if (e.target && e.target.id === 'checkout-btn') {
         if (orderModal) {
             orderModal.style.display = 'flex';
@@ -312,13 +306,11 @@ document.addEventListener('click', (e) => {
         }
     }
 
-    // Закрытие крестиком
     if (e.target && e.target.classList.contains('close-modal')) {
         if (orderModal) orderModal.style.display = 'none';
         if (successModal) successModal.style.display = 'none';
     }
 
-    // Клик по кнопке "ОК" в окне успешного заказа
     if (e.target && e.target.id === 'successCloseBtn') {
         if (successModal) successModal.style.display = 'none';
         renderCartPage();
@@ -422,7 +414,6 @@ document.addEventListener('submit', function (e) {
     }
 });
 
-// Привязываем функции к window
 window.updateHeaderCounters = updateHeaderCounters;
 window.renderSingleProductPage = renderSingleProductPage;
 window.renderCartPage = renderCartPage;

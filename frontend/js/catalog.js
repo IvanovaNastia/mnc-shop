@@ -1,4 +1,14 @@
 const API_URL = 'https://mnc-backend.onrender.com/api/products';
+const BACKEND_URL = 'https://mnc-backend.onrender.com';
+
+// Универсальная функция для формирования полного пути к картинке
+function getImageUrl(path) {
+    if (!path) return 'img/no-image.png';
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    if (path.startsWith('/uploads/')) return `${BACKEND_URL}${path}`;
+    if (path.startsWith('uploads/')) return `${BACKEND_URL}/${path}`;
+    return path.startsWith('/') ? path : `/${path}`;
+}
 
 // Глобальная функция инициализации для SPA-роутера и обычного DOMContentLoaded
 async function initCatalogPage() {
@@ -9,7 +19,6 @@ async function initCatalogPage() {
     const category = urlParams.get('category');
     const searchQuery = urlParams.get('search');
 
-    // Ищем элементы Каждый РАЗ заново в обновленном DOM
     const titleElement = document.getElementById('title');
     const gridElement = document.getElementById('product-grid');
 
@@ -91,7 +100,6 @@ async function initCatalogPage() {
                 saleProducts.forEach(item => renderCard(item, saleContainer, 'sale'));
             }
 
-            // 👇 ИНИЦИАЛИЗИРУЕМ СВАЙПЕР ТОЛЬКО ТУТ (когда карточки уже 100% в DOM)
             if (typeof window.initSwiper === 'function') {
                 setTimeout(() => {
                     window.initSwiper();
@@ -119,9 +127,7 @@ function renderProductGrid(productsList, container, currentType) {
     }
 
     productsList.forEach(item => {
-        const imgSrc = (item.img && (item.img.startsWith('http') || item.img.startsWith('/')))
-            ? item.img
-            : `/${item.img || ''}`;
+        const imgSrc = getImageUrl(item.img);
 
         const hasDiscount = item.discount > 0;
         const finalPrice = hasDiscount ? (item.price * (1 - item.discount / 100)).toFixed(2) : item.price.toFixed(2);
@@ -169,9 +175,7 @@ function goToProduct(id) {
 }
 
 function renderCard(item, container, blockType) {
-    const imgSrc = (item.img && (item.img.startsWith('http') || item.img.startsWith('/')))
-        ? item.img
-        : `/${item.img || ''}`;
+    const imgSrc = getImageUrl(item.img);
 
     const finalPrice = item.discount > 0 ? (item.price * (1 - item.discount / 100)).toFixed(2) : item.price.toFixed(2);
 
@@ -256,9 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         products.forEach(item => {
-            const imgSrc = (item.img && (item.img.startsWith('http') || item.img.startsWith('/')))
-                ? item.img
-                : `/${item.img || ''}`;
+            const imgSrc = getImageUrl(item.img);
 
             const finalPrice = item.discount > 0 ? (item.price * (1 - item.discount / 100)).toFixed(2) : item.price.toFixed(2);
 

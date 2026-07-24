@@ -1,6 +1,14 @@
 const ADMIN_API_URL = 'https://mnc-backend.onrender.com/api/products';
+const BACKEND_URL = 'https://mnc-backend.onrender.com';
 
-// --- НАДЕЖНАЯ ПРОВЕРКА АВТОРИЗАЦИИ ---
+function getImageUrl(path) {
+    if (!path) return 'img/no-image.png';
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    if (path.startsWith('/uploads/')) return `${BACKEND_URL}${path}`;
+    if (path.startsWith('uploads/')) return `${BACKEND_URL}/${path}`;
+    return path.startsWith('/') ? path : `/${path}`;
+}
+
 const adminPassword = localStorage.getItem('admin_password');
 if (!adminPassword) {
     window.location.href = 'login.html';
@@ -15,12 +23,10 @@ function logout() {
     window.location.href = 'login.html';
 }
 
-// Загружаем товары при открытии страницы
 document.addEventListener('DOMContentLoaded', loadAdminProducts);
 
 async function loadAdminProducts() {
     try {
-        // Эндпоинт GET /api/products открытый, но мы можем отправлять заголовок для единообразия
         const response = await fetch(ADMIN_API_URL);
         const products = await response.json();
 
@@ -41,9 +47,7 @@ function renderAdminTable(products) {
     }
 
     tbody.innerHTML = products.map((item) => {
-        const imgSrc = (item.img && (item.img.startsWith('http') || item.img.startsWith('/')))
-            ? item.img
-            : `/${item.img || ''}`;
+        const imgSrc = getImageUrl(item.img);
 
         const hasDiscount = item.discount > 0;
         const finalPrice = hasDiscount ? item.price * (1 - item.discount / 100) : item.price;
@@ -80,7 +84,6 @@ function renderAdminTable(products) {
     }).join('');
 }
 
-// Функция подготовки к редактированию
 async function editProduct(id) {
     try {
         if (!window.allProducts) return;
@@ -91,32 +94,25 @@ async function editProduct(id) {
             return;
         }
 
-        // 1. Меняем заголовок модалки и устанавливаем скрытый ID
         document.getElementById('modalTitle').textContent = `Редагувати товар (ID: ${item.id})`;
         document.getElementById('form-product-id').value = item.id;
 
-        // 2. Заполняем основные поля
         document.getElementById('form-title').value = item.title;
         document.getElementById('form-price').value = item.price;
         document.getElementById('form-discount').value = item.discount;
         document.getElementById('form-description').value = item.description || '';
 
-        // Для картинок при редактировании сохраняем старый путь в скрытое поле
         document.getElementById('form-img-old-path').value = item.img;
-        // И убираем обязательность загрузки нового файла
         document.getElementById('form-img-file').required = false;
 
-        // 3. Расставляем чекбоксы категорий
         const checkboxes = document.querySelectorAll('input[name="categories"]');
         checkboxes.forEach(cb => {
             cb.checked = Array.isArray(item.category) && item.category.includes(cb.value);
         });
 
-        // 4. Заполняем "Особисте"
         document.getElementById('form-isNew').checked = !!item.isNew;
         document.getElementById('form-isPopular').checked = !!item.isPopular;
 
-        // 5. Заполняем характеристики
         const specsContainer = document.getElementById('specs-container');
         specsContainer.innerHTML = '';
 
@@ -136,7 +132,6 @@ async function editProduct(id) {
             });
         }
 
-        // Открываем модалку
         document.getElementById('addProductModal').style.display = 'flex';
 
     } catch (error) {
@@ -144,7 +139,6 @@ async function editProduct(id) {
     }
 }
 
-// --- ИСПРАВЛЕНО: УДАЛЕНИЕ С ЗАГОЛОВКОМ АВТОРИЗАЦИИ ---
 async function deleteProduct(id) {
     const isConfirmed = confirm(`Ви впевнені, що хочете видалити товар з ID ${id}?`);
     if (!isConfirmed) return;
@@ -174,7 +168,6 @@ async function deleteProduct(id) {
     }
 }
 
-// Элементы модального окна
 const modal = document.getElementById('addProductModal');
 const openModalBtn = document.getElementById('openAddModalBtn');
 const closeModalBtn = document.getElementById('closeModalBtn');
@@ -199,7 +192,6 @@ function resetModalState() {
 if (closeModalBtn) closeModalBtn.addEventListener('click', resetModalState);
 window.addEventListener('click', (e) => { if (e.target === modal) resetModalState(); });
 
-// Инициализация формы (с поддержкой авторизации и POST/PUT)
 if (addProductForm) {
     addProductForm.replaceWith(addProductForm.cloneNode(true));
     const freshForm = document.getElementById('addProductForm');
@@ -211,7 +203,6 @@ if (addProductForm) {
         const oldImagePath = document.getElementById('form-img-old-path').value;
         let finalImgPath = oldImagePath || 'img/products/aaa.png';
 
-        // 1. ИСПРАВЛЕНО: Загрузка файла картинки на сервер с заголовком авторизации
         if (fileInput && fileInput.files.length > 0) {
             const formData = new FormData();
             formData.append("file", fileInput.files[0]);
@@ -246,7 +237,6 @@ if (addProductForm) {
 
         const checkedCategories = Array.from(document.querySelectorAll('input[name="categories"]:checked')).map(cb => cb.value);
 
-        // 3. Собираем кастомные характеристики
         const specsObj = {};
         document.querySelectorAll('.spec-dynamic-row').forEach(row => {
             const key = row.querySelector('.spec-key').value.trim();
@@ -254,7 +244,6 @@ if (addProductForm) {
             if (key && val) specsObj[key] = val;
         });
 
-        // 4. Формируем единый объект данных
         const productData = {
             title: document.getElementById('form-title').value.trim(),
             price: parseFloat(document.getElementById('form-price').value),
@@ -277,7 +266,6 @@ if (addProductForm) {
         }
 
         try {
-            // --- ИСПРАВЛЕНО: ОТПРАВКА ДАННЫХ ТОВАРА С ЗАГОЛОВКОМ АВТОРИЗАЦИИ ---
             const response = await fetch(url, {
                 method: method,
                 headers: {
@@ -309,7 +297,6 @@ if (addProductForm) {
     });
 }
 
-// Оживляем кнопку характеристик (Делегирование событий)
 document.addEventListener('click', function (e) {
     if (e.target && e.target.id === 'btn-add-spec-row') {
         const specsContainer = document.getElementById('specs-container');
