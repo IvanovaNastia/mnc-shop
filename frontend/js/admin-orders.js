@@ -17,13 +17,14 @@ function logout() {
 
 document.addEventListener('DOMContentLoaded', loadAdminOrders);
 
+// 1. Загрузка заказов
 async function loadAdminOrders() {
     try {
-        // Отправляем GET запрос с паролем в заголовке X-Admin-Password
         const response = await fetch(ORDERS_API_URL, {
             method: 'GET',
             headers: {
-                'X-Admin-Password': adminPassword
+                // Кодируем пароль, чтобы не было ошибки ISO-8859-1
+                'X-Admin-Password': encodeURIComponent(adminPassword || '')
             }
         });
 
@@ -115,14 +116,14 @@ function renderOrdersTable(orders) {
     }).join('');
 }
 
-// Функция смены статуса (тоже с паролем)
+// 2. Смена статуса
 async function changeOrderStatus(orderId, newStatus) {
     try {
         const response = await fetch(`${ORDERS_API_URL}/${orderId}/status`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Admin-Password': adminPassword
+                'X-Admin-Password': encodeURIComponent(adminPassword || '')
             },
             body: JSON.stringify({ status: newStatus })
         });
@@ -134,7 +135,7 @@ async function changeOrderStatus(orderId, newStatus) {
         }
 
         if (response.ok) {
-            console.log(`Статус замовлення №${orderId} успішно змінено на: ${newStatus}`);
+            console.log(`Статус замовлення №${orderId} успішно змінено`);
         } else {
             const errData = await response.json();
             alert(`Помилка зміни статусу: ${errData.detail || 'Щось пішло не так'}`);
@@ -145,7 +146,7 @@ async function changeOrderStatus(orderId, newStatus) {
     }
 }
 
-// Функция удаления заказа (тоже с паролем)
+// 3. Удаление заказа
 async function deleteOrder(id) {
     const isConfirmed = confirm(`Ви впевнені, що хочете видалити замовлення №${id}?`);
     if (!isConfirmed) return;
@@ -154,7 +155,7 @@ async function deleteOrder(id) {
         const response = await fetch(`${ORDERS_API_URL}/${id}`, {
             method: 'DELETE',
             headers: {
-                'X-Admin-Password': adminPassword
+                'X-Admin-Password': encodeURIComponent(adminPassword || '')
             }
         });
 

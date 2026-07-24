@@ -20,12 +20,23 @@ from dotenv import load_dotenv
 # Загружаем переменные из файла .env (если он есть в папке)
 load_dotenv()
 
-# Читаем секретный пароль из файла .env
+# --- ЧТЕНИЕ ПЕРЕМЕННЫХ ИЗ .ENV ---
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+
 if not ADMIN_PASSWORD:
     raise RuntimeError("КРИТИЧЕСКАЯ ОШИБКА: Переменная ADMIN_PASSWORD не задана в файле .env!")
 
 app = FastAPI()
+
+# 1. Определяем папку для загрузки файлов
+UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploads")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# 2. Подключаем StaticFiles к FastAPI
+from fastapi.staticfiles import StaticFiles
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 # Настройка CORS, чтобы фронтенд мог делать запросы к бэкенду
 app.add_middleware(
@@ -39,12 +50,18 @@ app.add_middleware(
 DB_PATH = "store.db"
 JSON_PATH = "products.json"
 
-# --- ФУНКЦИЯ ПРОВЕРКИ ПАРОЛЯ (ЗАВИСИМОСТЬ) ---
+# --- ФУНКЦИЯ ПРОВЕРКИ ПАРОЛЯ ---
 def verify_admin_password(x_admin_password: str = Header(None, alias="X-Admin-Password")):
     """Безопасная проверка токена авторизации в заголовках"""
-    if not x_admin_password or x_admin_password != ADMIN_PASSWORD:
+    if not x_admin_password:
+        raise HTTPException(status_code=401, detail="Доступ заборонено: відсутній токен")
+    
+    # Декодируем из URL-формата (на случай кириллицы из JS)
+    decoded_password = urllib.parse.unquote(x_admin_password)
+    
+    if decoded_password != ADMIN_PASSWORD:
         raise HTTPException(status_code=401, detail="Доступ заборонено: невірний токен авторизації")
-    return x_admin_password
+    return decoded_password
 
 def init_db():
     """Функция инициализации БД: создает таблицы продуктов и заказов"""
@@ -187,40 +204,38 @@ def create_order(order: OrderCreate):
         print(f"Замовлення успішно збережено в БД! ID: {new_id}")
         
         # --- ОТПРАВКА УВЕДОМЛЕНИЯ В TELEGRAM ---
-        try:
-            BOT_TOKEN = "8610215410:AAG099rXsaWXG8AYAYezy3H2-UkIM0Qd2zU"
-            CHAT_ID = "434628406"
-            
-            items_text = ""
-            total_price = 0
-            for item in order.items:
-                price = item.get('price', 0)
-                discount = item.get('discount', 0)
-                final_price = price * (1 - discount / 100) if discount > 0 else price
-                
-                qty = item.get('quantity', 1)
-                cost = final_price * qty
-                total_price += cost
-                
-                items_text += f"🔹 {item.get('title')} — {qty} шт. x {final_price:.2f} грн\n"
+        if BOT_TOKEN and CHAT_ID:
+            try:
+                items_text = ""
+                total_price = 0
+                for item in order.items:
+                    price = item.get('price', 0)
+                    discount = item.get('discount', 0)
+                    final_price = price * (1 - discount / 100) if discount > 0 else price
+                    
+                    qty = item.get('quantity', 1)
+                    cost = final_price * qty
+                    total_price += cost
+                    
+                    items_text += f"🔹 {item.get('title')} — {qty} шт. x {final_price:.2f} грн\n"
 
-            tg_message = (
-                f"🛍️ **НОВЕ ЗАМОВЛЕННЯ №{new_id}**\n\n"
-                f"👤 **Покупець:** {order.name}\n"
-                f"📞 **Телефон:** {order.phone}\n"
-                f"📧 **Email:** {order.email}\n\n"
-                f"📦 **Товари:**\n{items_text}\n"
-                f"💰 **Разом до оплати:** {total_price:.2f} грн"
-            )
-            
-            encoded_message = urllib.parse.quote_plus(tg_message)
-            tg_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage?chat_id={CHAT_ID}&text={encoded_message}&parse_mode=Markdown"
-            
-            urllib.request.urlopen(tg_url)
-            print("Сповіщення в Telegram успішно надіслано!")
-            
-        except Exception as tg_err:
-            print(f"Помилка відправки в Telegram: {str(tg_err)}")
+                tg_message = (
+                    f"🛍️ **НОВЕ ЗАМОВЛЕННЯ №{new_id}**\n\n"
+                    f"👤 **Покупець:** {order.name}\n"
+                    f"📞 **Телефон:** {order.phone}\n"
+                    f"📧 **Email:** {order.email}\n\n"
+                    f"📦 **Товари:**\n{items_text}\n"
+                    f"💰 **Разом до оплати:** {total_price:.2f} грн"
+                )
+                
+                encoded_message = urllib.parse.quote_plus(tg_message)
+                tg_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage?chat_id={CHAT_ID}&text={encoded_message}&parse_mode=Markdown"
+                
+                urllib.request.urlopen(tg_url)
+                print("Сповіщення в Telegram успішно надіслано!")
+                
+            except Exception as tg_err:
+                print(f"Помилка відправки в Telegram: {str(tg_err)}")
         
     except Exception as e:
         conn.close()
@@ -407,11 +422,6 @@ def update_product(product_id: int, product: ProductCreate, admin_password: str 
     conn.close()
     return {"message": f"Товар з ID {product_id} успішно оновлено"}
 
-# Укажи правильный путь к папке с картинками твоего фронтенда
-UPLOAD_DIR = os.path.join("..", "frontend", "img", "products")
-# Создаем папку, если её вдруг нет
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
 @app.post("/api/upload")
 async def upload_image(file: UploadFile = File(...), admin_password: str = Depends(verify_admin_password)):
     """Эндпоинт для сохранения картинки, автоматической конвертации в WebP и оптимизации веса"""
@@ -439,7 +449,7 @@ async def upload_image(file: UploadFile = File(...), admin_password: str = Depen
         image.save(file_path, "WEBP", quality=80)
         
         # Возвращаем путь, который админка подставит в карточку товара
-        return {"img_url": f"/img/products/{webp_filename}"}
+        return {"img_url": f"/uploads/{webp_filename}"}
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Не вдалося обробити та зберегти зображення: {str(e)}")
