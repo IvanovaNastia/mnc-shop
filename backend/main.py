@@ -1,29 +1,34 @@
-import sqlite3
-import json
-import shutil
 import os
-from datetime import datetime
+import json
 import urllib.request
 import urllib.parse
+from datetime import datetime
 from typing import List, Dict, Optional
 from io import BytesIO
 from PIL import Image
 
+# Импорт PostgreSQL вместо sqlite3
+import psycopg2
+from psycopg2.extras import RealDictCursor
+
 # fastapi импорты
 from fastapi import FastAPI, HTTPException, Depends, File, UploadFile, Header
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-# Библиотека для чтения файлов настроек .env
+# Чтение переменных из .env
 from dotenv import load_dotenv
 
-# Загружаем переменные из файла .env (если он есть в папке)
 load_dotenv()
 
 # --- ЧТЕНИЕ ПЕРЕМЕННЫХ ИЗ .ENV ---
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+
+# Переменная базы данных из Render
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not ADMIN_PASSWORD:
     raise RuntimeError("КРИТИЧЕСКАЯ ОШИБКА: Переменная ADMIN_PASSWORD не задана в файле .env!")
@@ -35,10 +40,9 @@ UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # 2. Подключаем StaticFiles к FastAPI
-from fastapi.staticfiles import StaticFiles
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
-# Настройка CORS, чтобы фронтенд мог делать запросы к бэкенду
+# Настройка CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -47,16 +51,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-DB_PATH = "store.db"
 JSON_PATH = "products.json"
+
+# --- ВСПУМОГАТЕЛЬНАЯ ФУНКЦИЯ ДЛЯ ПОДКЛЮЧЕНИЯ К POSTGRESQL ---
+def get_db_connection():
+    if not DATABASE_URL:
+        raise RuntimeError("DATABASE_URL не задана в переменных окружения!")
+    # sslmode='require' нужен для безопасного подключения к Render Postgres
+    return psycopg2.connect(DATABASE_URL, sslmode='require')
 
 # --- ФУНКЦИЯ ПРОВЕРКИ ПАРОЛЯ ---
 def verify_admin_password(x_admin_password: str = Header(None, alias="X-Admin-Password")):
-    """Безопасная проверка токена авторизации в заголовках"""
     if not x_admin_password:
         raise HTTPException(status_code=401, detail="Доступ заборонено: відсутній токен")
     
-    # Декодируем из URL-формата (на случай кириллицы из JS)
     decoded_password = urllib.parse.unquote(x_admin_password)
     
     if decoded_password != ADMIN_PASSWORD:
@@ -64,42 +72,49 @@ def verify_admin_password(x_admin_password: str = Header(None, alias="X-Admin-Pa
     return decoded_password
 
 def init_db():
-    """Функция инициализации БД: создает таблицы продуктов и заказов"""
-    conn = sqlite3.connect(DB_PATH)
+    """Инициализация PostgreSQL: создание таблиц и первичный импорт из JSON"""
+    if not DATABASE_URL:
+        print("⚠️ DATABASE_URL не найден, пропуск инициализации БД (для локальных тестов без БД)")
+        return
+
+    conn = get_db_connection()
     cursor = conn.cursor()
     
-    # существующая таблица товаров
+    # Таблица товаров
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS products (
-            id INTEGER PRIMARY KEY,
-            title TEXT NOT_NULL,
-            price REAL NOT_NULL,
+            id SERIAL PRIMARY KEY,
+            title TEXT NOT NULL,
+            price NUMERIC(10, 2) NOT NULL,
             discount INTEGER DEFAULT 0,
             img TEXT,
             category TEXT,
-            isNew INTEGER DEFAULT 0,
-            isPopular INTEGER DEFAULT 0,
+            is_new INTEGER DEFAULT 0,
+            is_popular INTEGER DEFAULT 0,
             description TEXT,
             specs TEXT
-        )
+        );
     """)
     
-    # --- ДОБАВЛЯЕМ СЮДА ТАБЛИЦУ ЗАКАЗОВ ---
+    # Таблица заказов
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS orders (
-            id TEXT PRIMARY KEY,
-            user_name TEXT NOT_NULL,
-            user_email TEXT NOT_NULL,
-            user_phone TEXT NOT_NULL,
-            items TEXT NOT_NULL,
+            id VARCHAR(50) PRIMARY KEY,
+            user_name TEXT NOT NULL,
+            user_email TEXT NOT NULL,
+            user_phone TEXT NOT NULL,
+            items TEXT NOT NULL,
             status TEXT DEFAULT 'Новий',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
+        );
     """)
+    conn.commit()
+
+    # Перенос данных из products.json если база пуста
+    cursor.execute("SELECT COUNT(*) FROM products;")
+    count = cursor.fetchone()[0]
     
-    # Твой существующий код проверки и переноса данных из products.json
-    cursor.execute("SELECT COUNT(*) FROM products")
-    if cursor.fetchone()[0] == 0 and os.path.exists(JSON_PATH):
+    if count == 0 and os.path.exists(JSON_PATH):
         print("База данных пуста. Переносим товары из products.json...")
         with open(JSON_PATH, "r", encoding="utf-8") as f:
             products = json.load(f)
@@ -109,10 +124,9 @@ def init_db():
             specs_json = json.dumps(p.get("specs", {}), ensure_ascii=False)
             
             cursor.execute("""
-                INSERT INTO products (id, title, price, discount, img, category, isNew, isPopular, description, specs)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO products (title, price, discount, img, category, is_new, is_popular, description, specs)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
-                p.get("id"),
                 p.get("title"),
                 p.get("price"),
                 p.get("discount", 0),
@@ -124,38 +138,41 @@ def init_db():
                 specs_json
             ))
         conn.commit()
-        print("Перенос данных успешно завершен!")
+        print("Перенос данных в PostgreSQL успешно завершен!")
         
+    cursor.close()
     conn.close()
 
-# Запускаем создание базы данных при старте сервера
+# Запускаем инициализацию при старте
 init_db()
 
-# --- КЛИЕНТСКИЕ ЭНДПОИНТЫ (БЕЗ ЗАЩИТЫ, ДЛЯ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ) ---
+
+# --- КЛИЕНТСКИЕ ЭНДПОИНТЫ ---
 
 @app.get("/api/products")
 def get_products():
-    """Эндпоинт для фронтенда — отдает список товаров из базы данных"""
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row  # Чтобы данные возвращались в виде словаря
-    cursor = conn.cursor()
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
-    cursor.execute("SELECT * FROM products")
+    cursor.execute("SELECT * FROM products ORDER BY id ASC")
     rows = cursor.fetchall()
+    
+    cursor.close()
     conn.close()
     
     products_list = []
     for row in rows:
         product = dict(row)
-        product["category"] = json.loads(product["category"])
-        product["specs"] = json.loads(product["specs"])
-        product["isNew"] = bool(product["isNew"])
-        product["isPopular"] = bool(product["isPopular"])
+        product["category"] = json.loads(product["category"]) if product["category"] else []
+        product["specs"] = json.loads(product["specs"]) if product["specs"] else {}
+        product["isNew"] = bool(product["is_new"])
+        product["isPopular"] = bool(product["is_popular"])
+        product["price"] = float(product["price"])
         products_list.append(product)
         
     return products_list
 
-# Описываем, какие данные о заказе мы ждем от фронтенда
+
 class OrderCreate(BaseModel):
     name: str
     email: str
@@ -164,13 +181,12 @@ class OrderCreate(BaseModel):
 
 @app.post("/api/orders")
 def create_order(order: OrderCreate):
-    """Ендпоінт для прийому замовлень з фронтенду і збереження їх в БД + надсилання в Telegram"""
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
     
     today_str = datetime.now().strftime("%d%m%y")
     
-    cursor.execute("SELECT id FROM orders WHERE id LIKE ?", (f"{today_str}-%",))
+    cursor.execute("SELECT id FROM orders WHERE id LIKE %s", (f"{today_str}-%",))
     existing_ids = cursor.fetchall()
     
     max_counter = 0
@@ -192,7 +208,7 @@ def create_order(order: OrderCreate):
     try:
         cursor.execute("""
             INSERT INTO orders (id, user_name, user_email, user_phone, items)
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s)
         """, (
             new_id,
             order.name,
@@ -201,9 +217,9 @@ def create_order(order: OrderCreate):
             items_json
         ))
         conn.commit()
-        print(f"Замовлення успішно збережено в БД! ID: {new_id}")
+        print(f"Заказ успешно сохранен в PostgreSQL! ID: {new_id}")
         
-        # --- ОТПРАВКА УВЕДОМЛЕНИЯ В TELEGRAM ---
+        # --- TELEGRAM ---
         if BOT_TOKEN and CHAT_ID:
             try:
                 items_text = ""
@@ -232,105 +248,106 @@ def create_order(order: OrderCreate):
                 tg_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage?chat_id={CHAT_ID}&text={encoded_message}&parse_mode=Markdown"
                 
                 urllib.request.urlopen(tg_url)
-                print("Сповіщення в Telegram успішно надіслано!")
-                
             except Exception as tg_err:
                 print(f"Помилка відправки в Telegram: {str(tg_err)}")
         
     except Exception as e:
+        cursor.close()
         conn.close()
         raise HTTPException(status_code=400, detail=f"Помилка збереження замовлення: {str(e)}")
     
+    cursor.close()
     conn.close()
     return {"status": "success", "message": "Заказ успешно сохранен", "order_id": new_id}
 
-# --- ЗАЩИЩЕННЫЕ ЭНДПОИНТЫ АДМИНИСТРАТОРА ---
-# (Добавлена зависимость: Depends(verify_admin_password))
+
+# --- АДМИНСКИЕ ЭНДПОИНТЫ ---
 
 @app.get("/api/orders")
 def get_orders(admin_password: str = Depends(verify_admin_password)):
-    """Эндпоинт для админки — отдает список всех сохраненных заказов"""
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     cursor.execute("SELECT * FROM orders ORDER BY created_at DESC")
     rows = cursor.fetchall()
+    
+    cursor.close()
     conn.close()
     
     orders_list = []
     for row in rows:
         order = dict(row)
-        order["items"] = json.loads(order["items"])
+        order["items"] = json.loads(order["items"]) if order["items"] else []
         orders_list.append(order)
         
     return orders_list
+
 
 class OrderStatusUpdate(BaseModel):
     status: str
 
 @app.put("/api/orders/{order_id}/status")
 def update_order_status(order_id: str, data: OrderStatusUpdate, admin_password: str = Depends(verify_admin_password)):
-    """Эндпоинт для обновления статуса заказа"""
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
     
-    cursor.execute("SELECT id FROM orders WHERE id = ?", (order_id,))
+    cursor.execute("SELECT id FROM orders WHERE id = %s", (order_id,))
     if not cursor.fetchone():
+        cursor.close()
         conn.close()
         raise HTTPException(status_code=404, detail="Замовлення не знайдено")
     
     try:
-        cursor.execute("UPDATE orders SET status = ? WHERE id = ?", (data.status, order_id))
+        cursor.execute("UPDATE orders SET status = %s WHERE id = %s", (data.status, order_id))
         conn.commit()
     except Exception as e:
+        cursor.close()
         conn.close()
         raise HTTPException(status_code=400, detail=f"Помилка оновлення статусу: {str(e)}")
         
+    cursor.close()
     conn.close()
     return {"message": f"Статус замовлення №{order_id} змінено на {data.status}"}
 
+
 @app.delete("/api/orders/{order_id}")
 def delete_order(order_id: str, admin_password: str = Depends(verify_admin_password)):
-    """Ендпоінт для видалення замовлення за його ID"""
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Перевіряємо, чи існує таке замовлення
-    cursor.execute("SELECT id FROM orders WHERE id = ?", (order_id,))
+    cursor.execute("SELECT id FROM orders WHERE id = %s", (order_id,))
     if not cursor.fetchone():
+        cursor.close()
         conn.close()
         raise HTTPException(status_code=404, detail="Замовлення не знайдено")
     
-    # Видаляємо замовлення
-    cursor.execute("DELETE FROM orders WHERE id = ?", (order_id,))
+    cursor.execute("DELETE FROM orders WHERE id = %s", (order_id,))
     conn.commit()
+    cursor.close()
     conn.close()
     
     return {"message": f"Замовлення №{order_id} успішно видалено"}
 
+
 @app.delete("/api/products/{product_id}")
 def delete_product(product_id: int, admin_password: str = Depends(verify_admin_password)):
-    """Эндпоинт для удаления товара из базы данных по его ID"""
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Проверяем, существует ли вообще такой товар
-    cursor.execute("SELECT id FROM products WHERE id = ?", (product_id,))
-    product = cursor.fetchone()
-    
-    if not product:
+    cursor.execute("SELECT id FROM products WHERE id = %s", (product_id,))
+    if not cursor.fetchone():
+        cursor.close()
         conn.close()
         raise HTTPException(status_code=404, detail="Товар не знайдено")
     
-    # Удаляем товар
-    cursor.execute("DELETE FROM products WHERE id = ?", (product_id,))
+    cursor.execute("DELETE FROM products WHERE id = %s", (product_id,))
     conn.commit()
+    cursor.close()
     conn.close()
     
     return {"message": f"Товар з ID {product_id} успішно видалено"}
 
-# Описываем модель данных, которую мы ждем от фронтенда
+
 class ProductCreate(BaseModel):
     title: str
     price: float
@@ -344,25 +361,18 @@ class ProductCreate(BaseModel):
 
 @app.post("/api/products")
 def create_product(product: ProductCreate, admin_password: str = Depends(verify_admin_password)):
-    """Эндпоинт для добавления нового товара в базу данных"""
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Автоматически находим следующий свободный ID
-    cursor.execute("SELECT MAX(id) FROM products")
-    max_id = cursor.fetchone()[0]
-    next_id = (max_id + 1) if max_id is not None else 1
-    
-    # Сериализуем списки и словари в строки JSON для SQLite
     categories_json = json.dumps(product.category, ensure_ascii=False)
     specs_json = json.dumps(product.specs, ensure_ascii=False)
     
     try:
         cursor.execute("""
-            INSERT INTO products (id, title, price, discount, img, category, isNew, isPopular, description, specs)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO products (title, price, discount, img, category, is_new, is_popular, description, specs)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING id;
         """, (
-            next_id,
             product.title,
             product.price,
             product.discount,
@@ -373,23 +383,26 @@ def create_product(product: ProductCreate, admin_password: str = Depends(verify_
             product.description,
             specs_json
         ))
+        new_id = cursor.fetchone()[0]
         conn.commit()
     except Exception as e:
+        cursor.close()
         conn.close()
         raise HTTPException(status_code=400, detail=f"Помилка при збереженні: {str(e)}")
     
+    cursor.close()
     conn.close()
-    return {"message": "Товар успішно додано", "id": next_id}
+    return {"message": "Товар успішно додано", "id": new_id}
+
 
 @app.put("/api/products/{product_id}")
 def update_product(product_id: int, product: ProductCreate, admin_password: str = Depends(verify_admin_password)):
-    """Эндпоинт для редактирования существующего товара"""
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Проверяем, есть ли такой товар
-    cursor.execute("SELECT id FROM products WHERE id = ?", (product_id,))
+    cursor.execute("SELECT id FROM products WHERE id = %s", (product_id,))
     if not cursor.fetchone():
+        cursor.close()
         conn.close()
         raise HTTPException(status_code=404, detail="Товар не знайдено")
     
@@ -399,9 +412,9 @@ def update_product(product_id: int, product: ProductCreate, admin_password: str 
     try:
         cursor.execute("""
             UPDATE products 
-            SET title = ?, price = ?, discount = ?, img = ?, category = ?, 
-                isNew = ?, isPopular = ?, description = ?, specs = ?
-            WHERE id = ?
+            SET title = %s, price = %s, discount = %s, img = %s, category = %s, 
+                is_new = %s, is_popular = %s, description = %s, specs = %s
+            WHERE id = %s
         """, (
             product.title,
             product.price,
@@ -416,41 +429,36 @@ def update_product(product_id: int, product: ProductCreate, admin_password: str 
         ))
         conn.commit()
     except Exception as e:
+        cursor.close()
         conn.close()
         raise HTTPException(status_code=400, detail=f"Помилка оновлення: {str(e)}")
     
+    cursor.close()
     conn.close()
     return {"message": f"Товар з ID {product_id} успішно оновлено"}
 
+
 @app.post("/api/upload")
 async def upload_image(file: UploadFile = File(...), admin_password: str = Depends(verify_admin_password)):
-    """Эндпоинт для сохранения картинки, автоматической конвертации в WebP и оптимизации веса"""
-    # Проверяем, что это точно картинка
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Файл повинен бути зображенням")
     
     try:
-        # 1. Читаем картинку из запроса в оперативную память
         image_bytes = await file.read()
         image = Image.open(BytesIO(image_bytes))
         
-        # 2. Обрабатываем прозрачность (альфа-каналы)
         if image.mode in ("RGBA", "P"):
             image = image.convert("RGBA")
         else:
             image = image.convert("RGB")
             
-        # 3. Меняем оригинальное расширение на .webp
         clean_name = os.path.splitext(file.filename)[0]
         webp_filename = f"{clean_name}.webp"
         file_path = os.path.join(UPLOAD_DIR, webp_filename)
         
-        # 4. Сохраняем с качеством 80% (визуально разницы нет, но вес файла крошечный)
         image.save(file_path, "WEBP", quality=80)
         
-        # Возвращаем путь, который админка подставит в карточку товара
         return {"img_url": f"/uploads/{webp_filename}"}
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Не вдалося обробити та зберегти зображення: {str(e)}")
-
