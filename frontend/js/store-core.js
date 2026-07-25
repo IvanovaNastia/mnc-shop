@@ -1,5 +1,5 @@
-const CORE_API_URL = 'https://mnc-backend.onrender.com/api/products';
-const BACKEND_URL = 'https://mnc-backend.onrender.com';
+var CORE_API_URL = window.CORE_API_URL || 'https://mnc-backend.onrender.com/api/products';
+var BACKEND_URL = window.BACKEND_URL || 'https://mnc-backend.onrender.com';
 
 function getImageUrl(path) {
     if (!path) return 'img/no-image.png'; // Заглушка, если путь отсутствует
