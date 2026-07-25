@@ -22,6 +22,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+import cloudinary
+import cloudinary.uploader
+
+cloudinary.config( 
+  cloud_name = os.getenv('CLOUDINARY_CLOUD_NAME'), 
+  api_key = os.getenv('CLOUDINARY_API_KEY'), 
+  api_secret = os.getenv('CLOUDINARY_API_SECRET'),
+  secure = True
+)
+
+
 # --- ЧТЕНИЕ ПЕРЕМЕННЫХ ИЗ .ENV ---
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -440,25 +451,34 @@ def update_product(product_id: int, product: ProductCreate, admin_password: str 
 
 @app.post("/api/upload")
 async def upload_image(file: UploadFile = File(...), admin_password: str = Depends(verify_admin_password)):
+    """Оптимизация и загрузка картинки напрямую в Cloudinary"""
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Файл повинен бути зображенням")
-    
+
     try:
+        # Читаем и оптимизируем картинку в WebP в памяти
         image_bytes = await file.read()
         image = Image.open(BytesIO(image_bytes))
-        
+
         if image.mode in ("RGBA", "P"):
             image = image.convert("RGBA")
         else:
             image = image.convert("RGB")
-            
-        clean_name = os.path.splitext(file.filename)[0]
-        webp_filename = f"{clean_name}.webp"
-        file_path = os.path.join(UPLOAD_DIR, webp_filename)
-        
-        image.save(file_path, "WEBP", quality=80)
-        
-        return {"img_url": f"/uploads/{webp_filename}"}
-        
+
+        output = BytesIO()
+        image.save(output, format="WEBP", quality=80)
+        output.seek(0)
+
+        # Загружаем буфер в Cloudinary
+        upload_result = cloudinary.uploader.upload(
+            output,
+            folder="mnc_products",
+            format="webp"
+        )
+
+        # Возвращаем постоянную HTTPS-ссылку
+        return {"img_url": upload_result.get("secure_url")}
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Не вдалося обробити та зберегти зображення: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Помилка завантаження зображення: {str(e)}")
+    
