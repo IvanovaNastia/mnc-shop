@@ -1,25 +1,18 @@
 var API_URL = window.API_URL || 'https://mnc-backend.onrender.com/api/products';
 var BACKEND_URL = window.BACKEND_URL || 'https://mnc-backend.onrender.com';
 
+// ⚙️ НАСТРОЙКИ ПАГИНАЦИИ
+let currentPage = 1;
+const ITEMS_PER_PAGE = 8; // Сколько товаров показывать на 1 странице
+
 function getImageUrl(path) {
-    if (!path) return 'img/no-image.png'; // Заглушка, если путь отсутствует
-    // Если путь начинается с http/https (полный URL)
-    if (path.startsWith('http://') || path.startsWith('https://')) {
-        return path;
-    }
-    // Если путь загруженного файла с админки (начинается с /uploads/)
-    if (path.startsWith('/uploads/')) {
-        return `${BACKEND_URL}${path}`;
-    }
-    // Если путь относительный без слэша в начале (например, uploads/aaa.webp)
-    if (path.startsWith('uploads/')) {
-        return `${BACKEND_URL}/${path}`;
-    }
-    // Для статических картинок проекта из папки img/
+    if (!path) return 'img/no-image.png';
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    if (path.startsWith('/uploads/')) return `${BACKEND_URL}${path}`;
+    if (path.startsWith('uploads/')) return `${BACKEND_URL}/${path}`;
     return path.startsWith('/') ? path : `/${path}`;
 }
 
-// Глобальная функция инициализации для SPA-роутера и обычного DOMContentLoaded
 async function initCatalogPage() {
     console.log("🔄 initCatalogPage запущен на URL:", window.location.href);
 
@@ -28,7 +21,6 @@ async function initCatalogPage() {
     const category = urlParams.get('category');
     const searchQuery = urlParams.get('search');
 
-    // Ищем элементы Каждый РАЗ заново в обновленном DOM
     const titleElement = document.getElementById('title');
     const gridElement = document.getElementById('product-grid');
 
@@ -79,14 +71,22 @@ async function initCatalogPage() {
                 filteredProducts = [...products];
             } else if (category) {
                 pageTitle = category;
-                filteredProducts = products.filter(p => p.category && p.category.includes(category));
+                filteredProducts = products.filter(p => {
+                    if (!p.category) return false;
+                    return Array.isArray(p.category) 
+                        ? p.category.includes(category) 
+                        : p.category === category;
+                });
             } else {
                 pageTitle = "Каталог товарів";
                 filteredProducts = [...products];
             }
 
             titleElement.textContent = pageTitle;
-            renderProductGrid(filteredProducts, gridElement, type);
+            
+            // Сбрасываем страницу на 1-ю и рендерим с пагинацией
+            currentPage = 1;
+            renderPaginatedCatalog(filteredProducts, gridElement, type);
         }
 
         // 2. Логика для ГЛАВНОЙ СТРАНИЦЫ (index.html)
@@ -110,11 +110,8 @@ async function initCatalogPage() {
                 saleProducts.forEach(item => renderCard(item, saleContainer, 'sale'));
             }
 
-            // 👇 ИНИЦИАЛИЗИРУЕМ СВАЙПЕР ТОЛЬКО ТУТ (когда карточки уже 100% в DOM)
             if (typeof window.initSwiper === 'function') {
-                setTimeout(() => {
-                    window.initSwiper();
-                }, 100);
+                setTimeout(() => window.initSwiper(), 100);
             }
         }
 
@@ -129,17 +126,87 @@ async function initCatalogPage() {
 window.initCatalogPage = initCatalogPage;
 document.addEventListener('DOMContentLoaded', initCatalogPage);
 
+// 🔄 ФУНКЦИЯ ОТРЕСОВКИ С ПАГИНАЦИЕЙ
+function renderPaginatedCatalog(productsList, container, currentType) {
+    const totalPages = Math.ceil(productsList.length / ITEMS_PER_PAGE);
+
+    if (currentPage < 1) currentPage = 1;
+    if (currentPage > totalPages && totalPages > 0) currentPage = totalPages;
+
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    const currentProducts = productsList.slice(startIndex, endIndex);
+
+    // Отрисовываем только товары текущей страницы
+    renderProductGrid(currentProducts, container, currentType);
+
+    // Отрисовываем стрелки снизу
+    renderPaginationControls(productsList, container, currentType, totalPages);
+}
+
+// ⬅️ ➡️ ФУНКЦИЯ СОЗДАНИЯ СТРЕЛОК И КНОПОК
+function renderPaginationControls(productsList, container, currentType, totalPages) {
+    let paginationContainer = document.getElementById('pagination-controls');
+
+    // Если контейнера для кнопок ещё нет в HTML — создаём его под блоком товаров
+    if (!paginationContainer) {
+        paginationContainer = document.createElement('div');
+        paginationContainer.id = 'pagination-controls';
+        paginationContainer.className = 'pagination-container';
+        container.parentNode.insertBefore(paginationContainer, container.nextSibling);
+    }
+
+    // Если 1 страница или нет товаров — скрываем кнопки
+    if (totalPages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
+
+    paginationContainer.innerHTML = `
+        <button class="pagination-btn" id="prev-page-btn" ${currentPage === 1 ? 'disabled' : ''}>
+            ← Назад
+        </button>
+        <span class="pagination-info">Сторінка ${currentPage} з ${totalPages}</span>
+        <button class="pagination-btn" id="next-page-btn" ${currentPage === totalPages ? 'disabled' : ''}>
+            Вперед →
+        </button>
+    `;
+
+    // Слушатель "Назад"
+    const prevBtn = document.getElementById('prev-page-btn');
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderPaginatedCatalog(productsList, container, currentType);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        });
+    }
+
+    // Слушатель "Вперед"
+    const nextBtn = document.getElementById('next-page-btn');
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderPaginatedCatalog(productsList, container, currentType);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        });
+    }
+}
+
 function renderProductGrid(productsList, container, currentType) {
     container.innerHTML = '';
 
     if (productsList.length === 0) {
-        container.innerHTML = '<div class="empty-message">Наразі немає товарів у цій категории.</div>';
+        container.innerHTML = '<div class="empty-message">Наразі немає товарів у цій категорії.</div>';
         return;
     }
 
     productsList.forEach(item => {
         const imgSrc = getImageUrl(item.img);
-
         const hasDiscount = item.discount > 0;
         const finalPrice = hasDiscount ? (item.price * (1 - item.discount / 100)).toFixed(2) : item.price.toFixed(2);
 
@@ -187,7 +254,6 @@ function goToProduct(id) {
 
 function renderCard(item, container, blockType) {
     const imgSrc = getImageUrl(item.img);
-
     const finalPrice = item.discount > 0 ? (item.price * (1 - item.discount / 100)).toFixed(2) : item.price.toFixed(2);
 
     let badgeHTML = '';
@@ -222,6 +288,14 @@ function renderCard(item, container, blockType) {
     container.appendChild(card);
 }
 
+// Заглушки
+if (typeof window.addToCart !== 'function') {
+    window.addToCart = function(id) { console.log(`Товар ${id} добавлен в корзину`); };
+}
+if (typeof window.addToFav !== 'function') {
+    window.addToFav = function(id) { console.log(`Товар ${id} добавлен в избранное`); };
+}
+
 // Поисковые подсказки
 document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('header-search-input');
@@ -234,11 +308,9 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadProductsForSearch() {
         try {
             const response = await fetch(API_URL);
-            if (response.ok) {
-                allProducts = await response.json();
-            }
+            if (response.ok) allProducts = await response.json();
         } catch (error) {
-            console.error("Ошибка предзагрузки товаров для поиска:", error);
+            console.error("Ошибка поиска:", error);
         }
     }
 
@@ -253,10 +325,18 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const matchedProducts = allProducts.filter(p =>
-            (p.title && p.title.toLowerCase().includes(query)) ||
-            (p.category && p.category.some(cat => cat.toLowerCase().includes(query)))
-        ).slice(0, 6);
+        const matchedProducts = allProducts.filter(p => {
+            const matchesTitle = p.title && p.title.toLowerCase().includes(query);
+            let matchesCategory = false;
+            if (p.category) {
+                if (Array.isArray(p.category)) {
+                    matchesCategory = p.category.some(cat => cat.toLowerCase().includes(query));
+                } else if (typeof p.category === 'string') {
+                    matchesCategory = p.category.toLowerCase().includes(query);
+                }
+            }
+            return matchesTitle || matchesCategory;
+        }).slice(0, 6);
 
         renderSuggestions(matchedProducts);
     });
@@ -272,7 +352,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         products.forEach(item => {
             const imgSrc = getImageUrl(item.img);
-
             const finalPrice = item.discount > 0 ? (item.price * (1 - item.discount / 100)).toFixed(2) : item.price.toFixed(2);
 
             const div = document.createElement('div');
@@ -285,10 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
 
-            div.addEventListener('click', () => {
-                goToProduct(item.id);
-            });
-
+            div.addEventListener('click', () => goToProduct(item.id));
             suggestionsContainer.appendChild(div);
         });
 
