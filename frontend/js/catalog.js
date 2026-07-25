@@ -3,7 +3,7 @@ var BACKEND_URL = window.BACKEND_URL || 'https://mnc-backend.onrender.com';
 
 // ⚙️ НАСТРОЙКИ ПАГИНАЦИИ
 let currentPage = 1;
-const ITEMS_PER_PAGE = 8; // Сколько товаров показывать на 1 странице
+const ITEMS_PER_PAGE = 20; // Сколько товаров показывать на 1 странице
 
 function getImageUrl(path) {
     if (!path) return 'img/no-image.png';
