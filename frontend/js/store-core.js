@@ -3,22 +3,22 @@ var BACKEND_URL = window.BACKEND_URL || 'https://mnc-backend.onrender.com';
 
 function getImageUrl(path) {
     if (!path) return 'img/no-image.png'; // Заглушка, если путь отсутствует
-    
+
     // Если путь начинается с http/https (полный URL)
     if (path.startsWith('http://') || path.startsWith('https://')) {
         return path;
     }
-    
+
     // Если путь загруженного файла с админки (начинается с /uploads/)
     if (path.startsWith('/uploads/')) {
         return `${BACKEND_URL}${path}`;
     }
-    
+
     // Если путь относительный без слэша в начале (например, uploads/aaa.webp)
     if (path.startsWith('uploads/')) {
         return `${BACKEND_URL}/${path}`;
     }
-    
+
     // Для статических картинок проекта из папки img/
     return path.startsWith('/') ? path : `/${path}`;
 }
@@ -207,7 +207,7 @@ function renderCartPage() {
     if (asideMenu) asideMenu.style.display = 'block';
 
     cartMenu.innerHTML = cart.map(item => {
-        const imgSrc = getImageUrl(product.img);
+        const imgSrc = getImageUrl(item.img);
 
         const finalPrice = item.discount > 0 ? (item.price * (1 - item.discount / 100)) : item.price;
         return `
@@ -272,7 +272,7 @@ function renderFavPage() {
     }
 
     favMenu.innerHTML = favourite.map(item => {
-        const imgSrc = getImageUrl(product.img);
+        const imgSrc = getImageUrl(item.img);
 
         const finalPrice = item.discount > 0 ? (item.price * (1 - item.discount / 100)) : item.price;
         return `
@@ -319,7 +319,7 @@ window.moveFromFavToCart = function (id) {
 document.addEventListener('click', (e) => {
     const orderModal = document.getElementById('orderModal');
     const successModal = document.getElementById('successModal');
-    
+
     // Клик по кнопке "Оформити заказ"
     if (e.target && e.target.id === 'checkout-btn') {
         if (orderModal) {
@@ -349,7 +349,7 @@ document.addEventListener('submit', function (e) {
         e.preventDefault();
 
         const form = e.target;
-        
+
         const nameInput = form.querySelector('[name="userName"]') || document.getElementById('userName');
         const emailInput = form.querySelector('[name="userEmail"]') || document.getElementById('userEmail');
         const phoneInput = form.querySelector('[name="userPhone"]') || document.getElementById('userPhone');
