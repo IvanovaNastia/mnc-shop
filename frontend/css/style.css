@@ -280,7 +280,11 @@ body {
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px);
-    transition: all 0.4s ease;
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
+
+    /* Включаем внутренний скролл, если меню превышает высоту экрана */
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
 }
 
 .catalog-menu._active,
@@ -307,6 +311,71 @@ body {
 .catalog-list a:hover,
 .offers-list a:hover {
     color: #ff2222;
+}
+
+.submenu-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-right: 15px;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.submenu-toggle:hover,
+.submenu-toggle:hover a {
+    color: #ff2222 !important;
+}
+
+.submenu-toggle:hover .arrow-icon {
+    filter: invert(21%) sepia(87%) saturate(6320%) hue-rotate(352deg) brightness(101%) contrast(106%);
+}
+
+.submenu {
+    max-height: 0;
+    overflow: hidden;
+    padding-left: 15px;
+    transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+    opacity: 0;
+}
+
+
+.submenu li {
+    margin-bottom: 6px;
+}
+
+.submenu a {
+    font-size: 14px;
+    color: #555;
+}
+
+.submenu a:hover {
+    color: #ff2222;
+}
+
+.submenu {
+    max-height: 0;
+    overflow: hidden;
+    padding-left: 15px;
+    opacity: 0;
+    transition: max-height 0.35s cubic-bezier(0, 1, 0, 1), opacity 0.25s ease-out, margin-top 0.35s ease;
+}
+
+.has-submenu._open .submenu {
+    max-height: 400px;
+    opacity: 1;
+    margin-top: 5px;
+    transition: max-height 0.35s ease-in-out, opacity 0.3s ease-in, margin-top 0.35s ease;
+}
+
+.arrow-icon {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.3s ease, filter 0.2s ease;
+}
+
+.has-submenu._open .arrow-icon {
+    transform: rotate(90deg);
 }
 
 .desktop-only {
@@ -1631,12 +1700,13 @@ td {
 .categories-checkbox-group {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    /* Ровно две широкие колонки */
     gap: 10px;
     background: #f9f9f9;
     padding: 12px;
     border-radius: 6px;
     border: 1px solid #ddd;
+    max-height: 150px;
+    overflow-y: auto;
 }
 
 .category-row-item {
@@ -1714,6 +1784,34 @@ td {
     color: white;
     border-radius: 4px;
     padding: 0 10px;
+}
+
+#subcategories-container {
+    display: none;
+    margin-top: 10px;
+    padding: 10px;
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+}
+
+.subcategories-title {
+    font-weight: bold;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.subcategories-area {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 6px;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.subcategories-block {
+    display: none;
+    margin-top: 10px;
 }
 
 /* polity & terms */

@@ -19,6 +19,7 @@ async function initCatalogPage() {
     const urlParams = new URLSearchParams(window.location.search);
     const type = urlParams.get('type');
     const category = urlParams.get('category');
+    const subCategory = urlParams.get('sub');
     const searchQuery = urlParams.get('search');
 
     const titleElement = document.getElementById('title');
@@ -70,12 +71,18 @@ async function initCatalogPage() {
                 pageTitle = "Всі товари";
                 filteredProducts = [...products];
             } else if (category) {
-                pageTitle = category;
+                pageTitle = subCategory ? `${category} — ${subCategory}` : category;
                 filteredProducts = products.filter(p => {
                     if (!p.category) return false;
-                    return Array.isArray(p.category) 
-                        ? p.category.includes(category) 
-                        : p.category === category;
+
+                    const categoriesList = Array.isArray(p.category) ? p.category : [p.category];
+                    // 1. Проверяем, входит ли главная категория
+                    const matchesCategory = categoriesList.includes(category);
+                    // 2. Если выбрана подкатегория — проверяем, чтобы и она была в списке категорий товара
+                    if (subCategory) {
+                        return matchesCategory && categoriesList.includes(subCategory);
+                    }
+                    return matchesCategory;
                 });
             } else {
                 pageTitle = "Каталог товарів";
@@ -83,7 +90,7 @@ async function initCatalogPage() {
             }
 
             titleElement.textContent = pageTitle;
-            
+
             // Сбрасываем страницу на 1-ю и рендерим с пагинацией
             currentPage = 1;
             renderPaginatedCatalog(filteredProducts, gridElement, type);
@@ -290,10 +297,10 @@ function renderCard(item, container, blockType) {
 
 // Заглушки
 if (typeof window.addToCart !== 'function') {
-    window.addToCart = function(id) { console.log(`Товар ${id} добавлен в корзину`); };
+    window.addToCart = function (id) { console.log(`Товар ${id} добавлен в корзину`); };
 }
 if (typeof window.addToFav !== 'function') {
-    window.addToFav = function(id) { console.log(`Товар ${id} добавлен в избранное`); };
+    window.addToFav = function (id) { console.log(`Товар ${id} добавлен в избранное`); };
 }
 
 // Поисковые подсказки

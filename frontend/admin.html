@@ -96,24 +96,190 @@
 
                     <!-- ПРАВАЯ КОЛОНКА: Категории, Особисте, Характеристики -->
                     <div class="form-column">
-                        <!-- Категории чекбоксами -->
+                        <!-- Блок выбора категорий -->
+                        <!-- Блок выбора категорий -->
                         <div class="form-group">
                             <label>Категорії:</label>
                             <div class="categories-checkbox-group">
-                                <label class="category-row-item"><input type="checkbox" name="categories"
-                                        value="Побутова хімія"> Побутова хімія</label>
-                                <label class="category-row-item"><input type="checkbox" name="categories"
-                                        value="Текстиль"> Текстиль</label>
-                                <label class="category-row-item"><input type="checkbox" name="categories"
-                                        value="Кухонні дрібниці"> Кухонні дрібниці</label>
-                                <label class="category-row-item"><input type="checkbox" name="categories" value="Посуд">
-                                    Посуд</label>
-                                <label class="category-row-item"><input type="checkbox" name="categories"
-                                        value="Іграшка"> Іграшка</label>
-                                <label class="category-row-item"><input type="checkbox" name="categories"
-                                        value="Канцелярія"> Канцелярія</label>
-                                <label class="category-row-item"><input type="checkbox" name="categories"
-                                        value="Господарчі товари"> Господарчі товари</label>
+                                <label class="category-row-item"><strong><input type="checkbox" name="categories"
+                                            value="Побутова хімія" id="cat-household"> Побутова хімія</strong></label>
+                                <label class="category-row-item"><strong><input type="checkbox" name="categories"
+                                            value="Текстиль" id="cat-textile"> Текстиль</strong></label>
+                                <label class="category-row-item"><strong><input type="checkbox" name="categories"
+                                            value="Кухонні дрібниці" id="cat-kitchen"> Кухонні дрібниці</strong></label>
+                                <label class="category-row-item"><strong><input type="checkbox" name="categories"
+                                            value="Посуд" id="cat-tableware"> Посуд</strong></label>
+                                <label class="category-row-item"><strong><input type="checkbox" name="categories"
+                                            value="Іграшка" id="cat-toys"> Іграшка</strong></label>
+                                <label class="category-row-item"><strong><input type="checkbox" name="categories"
+                                            value="Канцелярія" id="cat-stationery"> Канцелярія</strong></label>
+                                <label class="category-row-item"><strong><input type="checkbox" name="categories"
+                                            value="Господарчі товари" id="cat-goods"> Господарчі товари</strong></label>
+                            </div>
+
+                            <!-- Подкатегории: Побутова хімія -->
+                            <div id="sub-household-container" class="subcategories-block">
+                                <label class="subcategories-title"><strong>Підкатегорії (Побутова
+                                        хімія):</strong></label>
+                                <div class="subcategories-area">
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Для прання"> Для прання</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Для миття посуду"> Для миття посуду</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Для кухні"> Для кухні</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Для ванної кімнати"> Для ванної кімнати</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Для туалету"> Для туалету</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Універсальні засоби"> Універсальні засоби</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Для скла та дзеркал"> Для скла та дзеркал</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Для підлоги"> Для підлоги</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Для меблів"> Для меблів</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Для килимів та м'яких меблів"> Для килимів та м'яких меблів</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Для видалення накипу"> Для видалення накипу</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Для прочищення труб"> Для прочищення труб</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Освіжувачі повітря"> Освіжувачі повітря</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Господарське мило"> Господарське мило</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Поліролі"> Поліролі</label>
+                                </div>
+                            </div>
+
+                            <!-- Подкатегории: Текстиль -->
+                            <div id="sub-textile-container" class="subcategories-block">
+                                <label class="subcategories-title"><strong>Підкатегорії (Текстиль):</strong></label>
+                                <div class="subcategories-area">
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Постільна білизна"> Постільна білизна</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Пледи та покривало"> Пледи та покривало</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Рушники кухонні"> Рушники кухонні</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Рушники банні та обличчя"> Рушники банні та обличчя</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Подушки та ковдри"> Подушки та ковдри</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Шкарпети жіночі"> Шкарпети жіночі</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Шкарпетки чоловічі"> Шкарпетки чоловічі</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Шкарпетки дитячі"> Шкарпетки дитячі</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Труси жіночі"> Труси жіночі</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Труси чоловічі"> Труси чоловічі</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Труси дитячі"> Труси дитячі</label>
+                                </div>
+                            </div>
+
+                            <!-- Подкатегории: Кухонні дрібниці -->
+                            <div id="sub-kitchen-container" class="subcategories-block">
+                                <label class="subcategories-title"><strong>Підкатегорії (Кухонні
+                                        дрібниці):</strong></label>
+                                <div class="subcategories-area">
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Контейнери та судки"> Контейнери та судки</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Миски та салатники"> Миски та салатники</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Обробні дошки"> Обробні дошки</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Кухонне приладдя"> Кухонне приладдя</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Тертки, сита та друшляки"> Тертки, сита та друшляки</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Форми для випічки"> Форми для випічки</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Мірний посуд"> Мірний посуд</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Банки для зберігання"> Банки для зберігання</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Сушарки для посуду"> Сушарки для посуду</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Організація кухні"> Організація кухні</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Одноразовий посуд"> Одноразовий посуд</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Сервірування столу"> Сервірування столу</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Інші кухонні дрібниці"> Інші кухонні дрібниці</label>
+                                </div>
+                            </div>
+
+                            <!-- Подкатегории: Посуд -->
+                            <div id="sub-tableware-container" class="subcategories-block">
+                                <label class="subcategories-title"><strong>Підкатегорії (Посуд):</strong></label>
+                                <div class="subcategories-area">
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Тарілки та блюда"> Тарілки та блюда</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Миски та салатники"> Миски та салатники</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Чашки, кухлі та склянки"> Чашки, кухлі та склянки</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Чайники та заварники"> Чайники та заварники</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Контейнери для їжі"> Контейнери для їжі</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Банки для зберігання"> Банки для зберігання</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Скляний посуд"> Скляний посуд</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Керамічний посуд"> Керамічний посуд</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Дитячий посуд"> Дитячий посуд</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Набори посуду"> Набори посуду</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Сервірування"> Сервірування</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Інший посуд"> Інший посуд</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Пательні"> Пательні</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Каструлі"> Каструлі</label>
+                                </div>
+                            </div>
+
+                            <!-- Подкатегории: Канцелярія -->
+                            <div id="sub-stationery-container" class="subcategories-block">
+                                <label class="subcategories-title"><strong>Підкатегорії (Канцелярія):</strong></label>
+                                <div class="subcategories-area">
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Письмове приладдя"> Письмове приладдя</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Зошити та блокноти"> Зошити та блокноти</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Альбоми та папір"> Альбоми та папір</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Творчість"> Творчість</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Пенали"> Пенали</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Папки та файли"> Папки та файли</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Обкладинки"> Обкладинки</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Настільне приладдя"> Настільне приладдя</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Офісна канцелярія"> Офісна канцелярія</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Товари для школи"> Товари для школи</label>
+                                    <label class="category-row-item"><input type="checkbox" name="categories"
+                                            value="Інша канцелярія"> Інша канцелярія</label>
+                                </div>
                             </div>
                         </div>
 

@@ -2,28 +2,24 @@ const ADMIN_API_URL = 'https://mnc-backend.onrender.com/api/products';
 const BACKEND_URL = 'https://mnc-backend.onrender.com';
 
 function getImageUrl(path) {
-    if (!path) return 'img/no-image.png'; // Заглушка, если путь отсутствует
-    
-    // Если путь начинается с http/https (полный URL)
+    if (!path) return 'img/no-image.png';
+
     if (path.startsWith('http://') || path.startsWith('https://')) {
         return path;
     }
-    
-    // Если путь загруженного файла с админки (начинается с /uploads/)
+
     if (path.startsWith('/uploads/')) {
         return `${BACKEND_URL}${path}`;
     }
-    
-    // Если путь относительный без слэша в начале (например, uploads/aaa.webp)
+
     if (path.startsWith('uploads/')) {
         return `${BACKEND_URL}/${path}`;
     }
-    
-    // Для статических картинок проекта из папки img/
+
     return path.startsWith('/') ? path : `/${path}`;
 }
 
-// --- НАДЕЖНАЯ ПРОВЕРКА АВТОРИЗАЦИИ ---
+// --- ПРОВЕРКА АВТОРИЗАЦИИ ---
 const adminPassword = localStorage.getItem('admin_password');
 if (!adminPassword) {
     window.location.href = 'login.html';
@@ -38,12 +34,10 @@ function logout() {
     window.location.href = 'login.html';
 }
 
-// Загружаем товары при открытии страницы
 document.addEventListener('DOMContentLoaded', loadAdminProducts);
 
 async function loadAdminProducts() {
     try {
-        // Эндпоинт GET /api/products открытый, но мы можем отправлять заголовок для единообразия
         const response = await fetch(ADMIN_API_URL);
         const products = await response.json();
 
@@ -101,6 +95,25 @@ function renderAdminTable(products) {
     }).join('');
 }
 
+// Управление отображением всех блоков подкатегорий
+function updateSubcategoryVisibility() {
+    const categoriesMap = [
+        { mainId: 'cat-household', subContainerId: 'sub-household-container' },
+        { mainId: 'cat-textile', subContainerId: 'sub-textile-container' },
+        { mainId: 'cat-kitchen', subContainerId: 'sub-kitchen-container' },
+        { mainId: 'cat-tableware', subContainerId: 'sub-tableware-container' },
+        { mainId: 'cat-stationery', subContainerId: 'sub-stationery-container' }
+    ];
+
+    categoriesMap.forEach(({ mainId, subContainerId }) => {
+        const mainCb = document.getElementById(mainId);
+        const subContainer = document.getElementById(subContainerId);
+        if (mainCb && subContainer) {
+            subContainer.style.display = mainCb.checked ? 'block' : 'none';
+        }
+    });
+}
+
 // Функция подготовки к редактированию
 async function editProduct(id) {
     try {
@@ -112,32 +125,32 @@ async function editProduct(id) {
             return;
         }
 
-        // 1. Меняем заголовок модалки и устанавливаем скрытый ID
+        // Перед заполнением очищаем модальное окно
+        resetModalState();
+
         document.getElementById('modalTitle').textContent = `Редагувати товар (ID: ${item.id})`;
         document.getElementById('form-product-id').value = item.id;
 
-        // 2. Заполняем основные поля
         document.getElementById('form-title').value = item.title;
         document.getElementById('form-price').value = item.price;
         document.getElementById('form-discount').value = item.discount;
         document.getElementById('form-description').value = item.description || '';
 
-        // Для картинок при редактировании сохраняем старый путь в скрытое поле
         document.getElementById('form-img-old-path').value = item.img;
-        // И убираем обязательность загрузки нового файла
         document.getElementById('form-img-file').required = false;
 
-        // 3. Расставляем чекбоксы категорий
+        // Расставляем чекбоксы категорий и подкатегорий
         const checkboxes = document.querySelectorAll('input[name="categories"]');
         checkboxes.forEach(cb => {
             cb.checked = Array.isArray(item.category) && item.category.includes(cb.value);
         });
 
-        // 4. Заполняем "Особисте"
+        // Показываем нужные блоки подкатегорий
+        updateSubcategoryVisibility();
+
         document.getElementById('form-isNew').checked = !!item.isNew;
         document.getElementById('form-isPopular').checked = !!item.isPopular;
 
-        // 5. Заполняем характеристики
         const specsContainer = document.getElementById('specs-container');
         specsContainer.innerHTML = '';
 
@@ -157,7 +170,6 @@ async function editProduct(id) {
             });
         }
 
-        // Открываем модалку
         document.getElementById('addProductModal').style.display = 'flex';
 
     } catch (error) {
@@ -165,7 +177,7 @@ async function editProduct(id) {
     }
 }
 
-// --- ИСПРАВЛЕНО: УДАЛЕНИЕ С ЗАГОЛОВКОМ АВТОРИЗАЦИИ ---
+// --- УДАЛЕНИЕ ТОВАРА ---
 async function deleteProduct(id) {
     const isConfirmed = confirm(`Ви впевнені, що хочете видалити товар з ID ${id}?`);
     if (!isConfirmed) return;
@@ -199,28 +211,68 @@ async function deleteProduct(id) {
 const modal = document.getElementById('addProductModal');
 const openModalBtn = document.getElementById('openAddModalBtn');
 const closeModalBtn = document.getElementById('closeModalBtn');
-const addProductForm = document.getElementById('addProductForm');
 
-if (openModalBtn) openModalBtn.addEventListener('click', () => modal.style.display = 'flex');
-
+// --- НАДЕЖНАЯ ФУНКЦИЯ ОЧИСТКИ И СБРОСА ФОРМЫ ---
 function resetModalState() {
-    modal.style.display = 'none';
-    if (addProductForm) addProductForm.reset();
-    document.getElementById('modalTitle').textContent = 'Додати новий товар';
-    document.getElementById('form-product-id').value = '';
-    document.getElementById('specs-container').innerHTML = '';
+    const activeForm = document.getElementById('addProductForm');
+    if (activeForm) {
+        activeForm.reset();
+    }
 
-    const fileInput = document.getElementById('form-img-file');
-    if (fileInput) fileInput.required = true;
+    document.getElementById('modalTitle').textContent = 'Додати новий товар';
+    
+    const productIdInput = document.getElementById('form-product-id');
+    if (productIdInput) productIdInput.value = '';
 
     const oldPathInput = document.getElementById('form-img-old-path');
     if (oldPathInput) oldPathInput.value = '';
+
+    // Снимаем все чекбоксы
+    document.querySelectorAll('input[name="categories"]').forEach(cb => {
+        cb.checked = false;
+    });
+
+    // Скрываем все блоки подкатегорий
+    document.querySelectorAll('.subcategories-block').forEach(block => {
+        block.style.display = 'none';
+    });
+
+    const specsContainer = document.getElementById('specs-container');
+    if (specsContainer) {
+        specsContainer.innerHTML = '';
+    }
+
+    const fileInput = document.getElementById('form-img-file');
+    if (fileInput) {
+        fileInput.required = true;
+    }
 }
 
-if (closeModalBtn) closeModalBtn.addEventListener('click', resetModalState);
-window.addEventListener('click', (e) => { if (e.target === modal) resetModalState(); });
+// Открытие модалки для добавления нового товара
+if (openModalBtn) {
+    openModalBtn.addEventListener('click', () => {
+        resetModalState();
+        modal.style.display = 'flex';
+    });
+}
 
-// Инициализация формы (с поддержкой авторизации и POST/PUT)
+// Закрытие модального окна
+if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+        resetModalState();
+    });
+}
+
+window.addEventListener('click', (e) => { 
+    if (e.target === modal) {
+        modal.style.display = 'none';
+        resetModalState();
+    }
+});
+
+// Инициализация формы (POST / PUT)
+const addProductForm = document.getElementById('addProductForm');
 if (addProductForm) {
     addProductForm.replaceWith(addProductForm.cloneNode(true));
     const freshForm = document.getElementById('addProductForm');
@@ -232,7 +284,6 @@ if (addProductForm) {
         const oldImagePath = document.getElementById('form-img-old-path').value;
         let finalImgPath = oldImagePath || 'img/products/aaa.png';
 
-        // 1. ИСПРАВЛЕНО: Загрузка файла картинки на сервер с заголовком авторизации
         if (fileInput && fileInput.files.length > 0) {
             const formData = new FormData();
             formData.append("file", fileInput.files[0]);
@@ -267,7 +318,6 @@ if (addProductForm) {
 
         const checkedCategories = Array.from(document.querySelectorAll('input[name="categories"]:checked')).map(cb => cb.value);
 
-        // 3. Собираем кастомные характеристики
         const specsObj = {};
         document.querySelectorAll('.spec-dynamic-row').forEach(row => {
             const key = row.querySelector('.spec-key').value.trim();
@@ -275,7 +325,6 @@ if (addProductForm) {
             if (key && val) specsObj[key] = val;
         });
 
-        // 4. Формируем единый объект данных
         const productData = {
             title: document.getElementById('form-title').value.trim(),
             price: parseFloat(document.getElementById('form-price').value),
@@ -298,7 +347,6 @@ if (addProductForm) {
         }
 
         try {
-            // --- ИСПРАВЛЕНО: ОТПРАВКА ДАННЫХ ТОВАРА С ЗАГОЛОВКОМ АВТОРИЗАЦИИ ---
             const response = await fetch(url, {
                 method: method,
                 headers: {
@@ -317,6 +365,7 @@ if (addProductForm) {
 
             if (response.ok) {
                 alert(editId ? 'Товар успішно оновлено!' : 'Товар успішно додано!');
+                modal.style.display = 'none';
                 resetModalState();
                 loadAdminProducts();
             } else {
@@ -330,7 +379,7 @@ if (addProductForm) {
     });
 }
 
-// Оживляем кнопку характеристик (Делегирование событий)
+// Добавление строки характеристики
 document.addEventListener('click', function (e) {
     if (e.target && e.target.id === 'btn-add-spec-row') {
         const specsContainer = document.getElementById('specs-container');
@@ -347,5 +396,12 @@ document.addEventListener('click', function (e) {
             `;
             specsContainer.appendChild(row);
         }
+    }
+});
+
+// Динамическое переключение видимости подкатегорий при клике на главные категории
+document.addEventListener('change', function (e) {
+    if (e.target && e.target.name === 'categories') {
+        updateSubcategoryVisibility();
     }
 });
