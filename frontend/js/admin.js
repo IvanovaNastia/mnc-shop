@@ -95,7 +95,7 @@ function renderAdminTable(products) {
     }).join('');
 }
 
-// Управление отображением всех блоков подкатегорий
+// Управление отображением и автоматической очисткой подкатегорий
 function updateSubcategoryVisibility() {
     const categoriesMap = [
         { mainId: 'cat-household', subContainerId: 'sub-household-container' },
@@ -108,8 +108,21 @@ function updateSubcategoryVisibility() {
     categoriesMap.forEach(({ mainId, subContainerId }) => {
         const mainCb = document.getElementById(mainId);
         const subContainer = document.getElementById(subContainerId);
+
         if (mainCb && subContainer) {
-            subContainer.style.display = mainCb.checked ? 'block' : 'none';
+            if (mainCb.checked) {
+                // Если главная категория выбрана — показываем блок подкатегорий
+                subContainer.style.display = 'block';
+            } else {
+                // Если главная категория отключена — скрываем блок
+                subContainer.style.display = 'none';
+
+                // И СНИМАЕМ галочки со всех подкатегорий внутри этого блока!
+                const subCheckboxes = subContainer.querySelectorAll('input[type="checkbox"]');
+                subCheckboxes.forEach(cb => {
+                    cb.checked = false;
+                });
+            }
         }
     });
 }
