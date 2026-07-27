@@ -102,7 +102,8 @@ function updateSubcategoryVisibility() {
         { mainId: 'cat-textile', subContainerId: 'sub-textile-container' },
         { mainId: 'cat-kitchen', subContainerId: 'sub-kitchen-container' },
         { mainId: 'cat-tableware', subContainerId: 'sub-tableware-container' },
-        { mainId: 'cat-stationery', subContainerId: 'sub-stationery-container' }
+        { mainId: 'cat-stationery', subContainerId: 'sub-stationery-container' },
+        { mainId: 'cat-goods', subContainerId: 'sub-goods-container' }
     ];
 
     categoriesMap.forEach(({ mainId, subContainerId }) => {
