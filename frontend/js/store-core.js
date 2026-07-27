@@ -251,12 +251,6 @@ function renderCartPage() {
                     <div>До оплати</div>
                     <div>${totalPrice.toFixed(2)} грн</div>
                 </div>
-                ${!isMinAmountReached ? `
-                    <div style="color: #e74c3c; font-size: 14px; margin: 10px 0; text-align: center; font-weight: bold;">
-                        Мінімальна сума замовлення — ${MIN_ORDER_AMOUNT} грн.<br>
-                        Додайте товарів ще на ${(MIN_ORDER_AMOUNT - totalPrice).toFixed(2)} грн.
-                    </div>
-                ` : ''}
                 <button class="aside-btn" id="checkout-btn" ${!isMinAmountReached ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>
                     Оформити заказ
                 </button>
