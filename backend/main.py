@@ -192,6 +192,21 @@ class OrderCreate(BaseModel):
 
 @app.post("/api/orders")
 def create_order(order: OrderCreate):
+    # --- Проверка минимальной суммы заказа (500 грн) ---
+    total_price = 0
+    for item in order.items:
+        price = item.get('price', 0)
+        discount = item.get('discount', 0)
+        final_price = price * (1 - discount / 100) if discount > 0 else price
+        qty = item.get('quantity', 1)
+        total_price += final_price * qty
+
+    if total_price < 500:
+        raise HTTPException(
+            status_code=400, 
+            detail="Мінімальна сума замовлення повинна бути не менше 500 грн"
+        )
+
     conn = get_db_connection()
     cursor = conn.cursor()
     
@@ -234,16 +249,12 @@ def create_order(order: OrderCreate):
         if BOT_TOKEN and CHAT_ID:
             try:
                 items_text = ""
-                total_price = 0
                 for item in order.items:
                     price = item.get('price', 0)
                     discount = item.get('discount', 0)
                     final_price = price * (1 - discount / 100) if discount > 0 else price
                     
                     qty = item.get('quantity', 1)
-                    cost = final_price * qty
-                    total_price += cost
-                    
                     items_text += f"🔹 {item.get('title')} — {qty} шт. x {final_price:.2f} грн\n"
 
                 tg_message = (
@@ -271,9 +282,7 @@ def create_order(order: OrderCreate):
     conn.close()
     return {"status": "success", "message": "Заказ успешно сохранен", "order_id": new_id}
 
-
 # --- АДМИНСКИЕ ЭНДПОИНТЫ ---
-
 @app.get("/api/orders")
 def get_orders(admin_password: str = Depends(verify_admin_password)):
     conn = get_db_connection()

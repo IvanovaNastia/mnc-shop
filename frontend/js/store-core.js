@@ -236,6 +236,9 @@ function renderCartPage() {
         return sum + (finalPrice * item.quantity);
     }, 0);
 
+    const MIN_ORDER_AMOUNT = 500;
+    const isMinAmountReached = totalPrice >= MIN_ORDER_AMOUNT;
+
     if (asideMenu) {
         asideMenu.innerHTML = `
             <div class="aside-container">
@@ -248,7 +251,15 @@ function renderCartPage() {
                     <div>До оплати</div>
                     <div>${totalPrice.toFixed(2)} грн</div>
                 </div>
-                <button class="aside-btn" id="checkout-btn">Оформити заказ</button>
+                ${!isMinAmountReached ? `
+                    <div style="color: #e74c3c; font-size: 14px; margin: 10px 0; text-align: center; font-weight: bold;">
+                        Мінімальна сума замовлення — ${MIN_ORDER_AMOUNT} грн.<br>
+                        Додайте товарів ще на ${(MIN_ORDER_AMOUNT - totalPrice).toFixed(2)} грн.
+                    </div>
+                ` : ''}
+                <button class="aside-btn" id="checkout-btn" ${!isMinAmountReached ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>
+                    Оформити заказ
+                </button>
             </div>
         `;
     }
@@ -322,6 +333,16 @@ document.addEventListener('click', (e) => {
 
     // Клик по кнопке "Оформити заказ"
     if (e.target && e.target.id === 'checkout-btn') {
+        const totalPrice = cart.reduce((sum, item) => {
+            const finalPrice = item.discount > 0 ? (item.price * (1 - item.discount / 100)) : item.price;
+            return sum + (finalPrice * item.quantity);
+        }, 0);
+
+        if (totalPrice < 500) {
+            alert("Мінімальна сума замовлення складає 500 грн.");
+            return;
+        }
+
         if (orderModal) {
             orderModal.style.display = 'flex';
         } else {
