@@ -53,7 +53,7 @@ function renderAdminTable(products) {
     if (!tbody) return;
 
     if (products.length === 0) {
-        tbody.innerHTML = `<tr><td class="admin-no-product" colspan="12">Товарів у базі даних немає</td></tr>`;
+        tbody.innerHTML = `<tr><td class="admin-no-product" colspan="11">Товарів у базі даних немає</td></tr>`;
         return;
     }
 
@@ -65,10 +65,6 @@ function renderAdminTable(products) {
 
         let categoriesHTML = (Array.isArray(item.category) && item.category.length > 0)
             ? item.category.map(cat => `<div>• ${cat}</div>`).join('')
-            : 'Немає';
-
-        let specsHTML = (item.specs && typeof item.specs === 'object')
-            ? Object.entries(item.specs).map(([key, value]) => `<div><strong>${key}:</strong> ${value}</div>`).join('')
             : 'Немає';
 
         return `
@@ -83,7 +79,6 @@ function renderAdminTable(products) {
                 <td>${item.isPopular ? '✅ Так' : '❌ Ні'}</td>
                 <td>${categoriesHTML}</td>
                 <td>${item.description || 'Немає'}</td>
-                <td>${specsHTML}</td>
                 <td>
                     <div class="btn-actions">
                         <button class="btn-edit" onclick="editProduct(${item.id})">Редагувати</button>
@@ -112,13 +107,10 @@ function updateSubcategoryVisibility() {
 
         if (mainCb && subContainer) {
             if (mainCb.checked) {
-                // Если главная категория выбрана — показываем блок подкатегорий
                 subContainer.style.display = 'block';
             } else {
-                // Если главная категория отключена — скрываем блок
                 subContainer.style.display = 'none';
 
-                // И СНИМАЕМ галочки со всех подкатегорий внутри этого блока!
                 const subCheckboxes = subContainer.querySelectorAll('input[type="checkbox"]');
                 subCheckboxes.forEach(cb => {
                     cb.checked = false;
@@ -139,7 +131,6 @@ async function editProduct(id) {
             return;
         }
 
-        // Перед заполнением очищаем модальное окно
         resetModalState();
 
         document.getElementById('modalTitle').textContent = `Редагувати товар (ID: ${item.id})`;
@@ -153,36 +144,15 @@ async function editProduct(id) {
         document.getElementById('form-img-old-path').value = item.img;
         document.getElementById('form-img-file').required = false;
 
-        // Расставляем чекбоксы категорий и подкатегорий
         const checkboxes = document.querySelectorAll('input[name="categories"]');
         checkboxes.forEach(cb => {
             cb.checked = Array.isArray(item.category) && item.category.includes(cb.value);
         });
 
-        // Показываем нужные блоки подкатегорий
         updateSubcategoryVisibility();
 
         document.getElementById('form-isNew').checked = !!item.isNew;
         document.getElementById('form-isPopular').checked = !!item.isPopular;
-
-        const specsContainer = document.getElementById('specs-container');
-        specsContainer.innerHTML = '';
-
-        if (item.specs && typeof item.specs === 'object') {
-            Object.entries(item.specs).forEach(([key, value]) => {
-                const row = document.createElement('div');
-                row.className = 'spec-dynamic-row';
-                row.style.display = 'flex';
-                row.style.gap = '10px';
-                row.style.marginBottom = '8px';
-                row.innerHTML = `
-                    <input type="text" value="${key}" class="spec-key" required>
-                    <input type="text" value="${value}" class="spec-value" required>
-                    <button type="button" class="btn-remove-spec" onclick="this.parentElement.remove()">✕</button>
-                `;
-                specsContainer.appendChild(row);
-            });
-        }
 
         document.getElementById('addProductModal').style.display = 'flex';
 
@@ -241,20 +211,13 @@ function resetModalState() {
     const oldPathInput = document.getElementById('form-img-old-path');
     if (oldPathInput) oldPathInput.value = '';
 
-    // Снимаем все чекбоксы
     document.querySelectorAll('input[name="categories"]').forEach(cb => {
         cb.checked = false;
     });
 
-    // Скрываем все блоки подкатегорий
     document.querySelectorAll('.subcategories-block').forEach(block => {
         block.style.display = 'none';
     });
-
-    const specsContainer = document.getElementById('specs-container');
-    if (specsContainer) {
-        specsContainer.innerHTML = '';
-    }
 
     const fileInput = document.getElementById('form-img-file');
     if (fileInput) {
@@ -332,13 +295,6 @@ if (addProductForm) {
 
         const checkedCategories = Array.from(document.querySelectorAll('input[name="categories"]:checked')).map(cb => cb.value);
 
-        const specsObj = {};
-        document.querySelectorAll('.spec-dynamic-row').forEach(row => {
-            const key = row.querySelector('.spec-key').value.trim();
-            const val = row.querySelector('.spec-value').value.trim();
-            if (key && val) specsObj[key] = val;
-        });
-
         const productData = {
             title: document.getElementById('form-title').value.trim(),
             price: parseFloat(document.getElementById('form-price').value),
@@ -347,8 +303,7 @@ if (addProductForm) {
             category: checkedCategories,
             isNew: document.getElementById('form-isNew').checked,
             isPopular: document.getElementById('form-isPopular').checked,
-            description: document.getElementById('form-description').value.trim(),
-            specs: specsObj
+            description: document.getElementById('form-description').value.trim()
         };
 
         const editId = document.getElementById('form-product-id').value;
@@ -392,26 +347,6 @@ if (addProductForm) {
         }
     });
 }
-
-// Добавление строки характеристики
-document.addEventListener('click', function (e) {
-    if (e.target && e.target.id === 'btn-add-spec-row') {
-        const specsContainer = document.getElementById('specs-container');
-        if (specsContainer) {
-            const row = document.createElement('div');
-            row.className = 'spec-dynamic-row';
-            row.style.display = 'flex';
-            row.style.gap = '10px';
-            row.style.marginBottom = '8px';
-            row.innerHTML = `
-                <input type="text" placeholder="Назва (напр. Вага)" class="spec-key" required>
-                <input type="text" placeholder="Значення" class="spec-value" required>
-                <button type="button" class="btn-remove-spec" onclick="this.parentElement.remove()">✕</button>
-            `;
-            specsContainer.appendChild(row);
-        }
-    }
-});
 
 // Динамическое переключение видимости подкатегорий при клике на главные категории
 document.addEventListener('change', function (e) {

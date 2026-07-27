@@ -111,7 +111,7 @@ window.addToFav = async function (id) {
     }
 };
 
-// ОТОБРАЖЕНИЕ СТРАНИЦЫ ОДНОГО ТОВАРА (Загрузка описания и характеристик из JSON бэкенда)
+// ОТОБРАЖЕНИЕ СТРАНИЦЫ ОДНОГО ТОВАРА
 async function renderSingleProductPage() {
     const urlParams = new URLSearchParams(window.location.search);
     const productId = parseInt(urlParams.get('id'));
@@ -125,67 +125,75 @@ async function renderSingleProductPage() {
         if (!product) return;
 
         const imgSrc = getImageUrl(product.img);
-
-        const productShow = document.querySelector('.product-show');
-        const productDescr = document.querySelector('.product-descr');
-
         const hasDiscount = product.discount > 0;
         const finalPrice = hasDiscount ? (product.price * (1 - product.discount / 100)).toFixed(2) : product.price.toFixed(2);
 
-        let badgeHTML = hasDiscount ? `<div class="badge badge-sale">-${product.discount}%</div>` : '';
+        // 1. Заголовок
+        const titleEl = document.getElementById('product-title');
+        if (titleEl) titleEl.textContent = product.title;
 
-        if (productShow) {
-            productShow.innerHTML = `
-                <div class="show-img">
-                    ${badgeHTML}
-                    <img src="${imgSrc}" alt="${product.title}">
-                </div>
-                <div class="show-info">
-                    <div class="show-text">
-                        <h1>${product.title}</h1>
-                        ${hasDiscount ?
-                    `<div class="show-price product-price-old show-price-old">${product.price.toFixed(2)} грн</div>
-                     <div class="show-price price-sale show-price-sale">${finalPrice} грн</div>`
-                    : `<div>${finalPrice} грн</div>`}
-                    </div>
-                    <div class="show-btn">
-                        <button class="btn-fav" onclick="addToFav(${product.id})">В обране</button>
-                        <button class="btn-cart" onclick="addToCart(${product.id})">В кошик</button>
-                    </div>
-                </div>
-            `;
+        // 2. Картинка
+        const imgEl = document.getElementById('product-img');
+        if (imgEl) {
+            imgEl.src = imgSrc;
+            imgEl.alt = product.title;
         }
 
-        if (productDescr) {
-            const descriptionText = product.description || "Опис товару найближчим часом з'явиться на сайті.";
-
-            // Рендеринг объекта характеристик (specs) из вашего .json файла
-            let specsHTML = "";
-            if (product.specs && Object.keys(product.specs).length > 0) {
-                specsHTML = "<ul>";
-                for (let key in product.specs) {
-                    specsHTML += `<li><strong>${key}:</strong> ${product.specs[key]}</li>`;
-                }
-                specsHTML += "</ul>";
-            } else {
-                specsHTML = `
-                    <div>Статус: ${product.isNew ? 'Новинка' : 'Стандарт'}</div>
-                    <div>Популярний: ${product.isPopular ? 'Так' : 'Ні'}</div>
-                    <div>Категорії: ${product.category ? product.category.join(', ') : 'Загальна'}</div>
+        // 3. Отображение цены
+        const priceBox = document.getElementById('product-price-box');
+        if (priceBox) {
+            if (hasDiscount) {
+                priceBox.innerHTML = `
+                    <div class="product-price-old">${product.price.toFixed(2)} грн</div>
+                    <div class="show-price price-sale">${finalPrice} грн</div>
                 `;
+            } else {
+                priceBox.innerHTML = `<div class="show-price">${finalPrice} грн</div>`;
             }
-
-            productDescr.innerHTML = `
-                <div>
-                    <h1>Опис товару</h1>
-                    <div class="descr-content">${descriptionText}</div>
-                </div>
-                <div>
-                    <h1>Характеристика товару</h1>
-                    <div class="specs-content">${specsHTML}</div>
-                </div>
-            `;
         }
+
+        // 4. Описание
+        const descrEl = document.getElementById('product-description-text');
+        if (descrEl) {
+            descrEl.textContent = product.description || "Опис товару відсутній.";
+        }
+
+        // 5. Логика счетчика (+ / -)
+        const qtyInput = document.getElementById('product-qty');
+        const qtyPlus = document.getElementById('qty-plus');
+        const qtyMinus = document.getElementById('qty-minus');
+
+        if (qtyInput && qtyPlus && qtyMinus) {
+            qtyPlus.onclick = () => {
+                let currentVal = parseInt(qtyInput.value) || 1;
+                qtyInput.value = currentVal + 1;
+            };
+
+            qtyMinus.onclick = () => {
+                let currentVal = parseInt(qtyInput.value) || 1;
+                if (currentVal > 1) {
+                    qtyInput.value = currentVal - 1;
+                }
+            };
+        }
+
+        // 6. Обработка кнопок Корзины и Избранного
+        const cartBtn = document.getElementById('cart-btn');
+        const favBtn = document.getElementById('fav-btn');
+
+        if (cartBtn) {
+            cartBtn.onclick = () => {
+                const qty = qtyInput ? parseInt(qtyInput.value) || 1 : 1;
+                for (let i = 0; i < qty; i++) {
+                    addToCart(product.id);
+                }
+            };
+        }
+
+        if (favBtn) {
+            favBtn.onclick = () => addToFav(product.id);
+        }
+
     } catch (e) {
         console.error("Помилка завантаження сторінки товару", e);
     }

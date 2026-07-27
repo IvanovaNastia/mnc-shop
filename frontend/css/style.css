@@ -855,7 +855,7 @@ body {
 
 /* product page css */
 
-.product-container {
+/* .product-container {
     display: flex;
     flex-direction: column;
     gap: 50px;
@@ -951,7 +951,7 @@ body {
         grid-template-columns: repeat(2, 1fr);
         gap: 50px;
     }
-}
+} */
 
 /* shop-cart */
 
@@ -1960,4 +1960,223 @@ td {
     font-size: 16px;
     font-weight: 600;
     color: #333;
+}
+
+.product-container {
+    margin-bottom: 30px;
+}
+
+.product-title-single {
+    font-size: 25px;
+    font-weight: 700;
+    margin-bottom: 15px;
+    text-align: left;
+    word-break: break-word;
+}
+
+/* Базовая мобильная сетка: в 1 колонку */
+.product-layout-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    align-items: start;
+}
+
+/* 1. Блок фото */
+.product-media-block .show-img {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 10px;
+}
+
+.product-media-block img {
+    width: 100%;
+    max-height: 350px;
+    object-fit: contain;
+}
+
+/* 2. Блок действий и цены */
+.product-actions-block {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid #eee;
+}
+
+.product-price-box {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.product-price-box .product-price-old{
+    font-size: 20px;
+}
+
+.show-price {
+    font-size: 25px;
+    font-weight: 700;
+}
+
+.quantity-action-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+/* КАСТОМНЫЙ СЧЕТЧИК (Как на макете) */
+.custom-quantity-counter {
+    display: flex;
+    width: 80px;
+    height: 42px;
+    border: 1px solid #888;
+    background: #fff;
+    box-sizing: border-border-box;
+    flex-shrink: 0;
+}
+
+.custom-quantity-counter input {
+    width: 50px;
+    height: 100%;
+    border: none;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    outline: none;
+    background: transparent;
+}
+
+.custom-quantity-counter input::-webkit-outer-spin-button,
+.custom-quantity-counter input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.qty-btn-group {
+    display: flex;
+    flex-direction: column;
+    width: 30px;
+    height: 100%;
+    border-left: 1px solid #888;
+}
+
+.qty-btn {
+    width: 100%;
+    height: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #f2f2f2;
+    border: none;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    user-select: none;
+    color: #333;
+    transition: background 0.1s ease;
+}
+
+.qty-btn:first-child {
+    border-bottom: 1px solid #888;
+}
+
+.qty-btn:hover {
+    background: #e0e0e0;
+}
+
+.qty-btn:active {
+    background: #ccc;
+}
+
+/* Кнопки "В кошик" и "В обране" */
+.btn-cart {
+    flex-grow: 1;
+    height: 42px;
+    background: #0059ff;
+    color: #fff;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.btn-cart:hover {
+    background: #0047b2;
+}
+
+.btn-fav {
+    width: 100%;
+    height: 40px;
+    background: #ff0000;
+    color: #fff;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.btn-fav:hover {
+    background: #cf0000;
+}
+
+/* 3. Блок описания */
+.product-description-block {
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 15px;
+    background: #fff;
+}
+
+.product-description-block h2 {
+    font-size: 18px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
+}
+
+.description-content {
+    line-height: 1.5;
+    color: #444;
+}
+
+/* ==========================================================================
+   ADAPTIVE (MIN-WIDTH MEDIA QUERIES)
+   ========================================================================== */
+
+/* Планшеты (от 768px): 2 колонки */
+@media (min-width: 768px) {
+    .product-title-single {
+        font-size: 26px;
+    }
+
+    .product-layout-grid {
+        grid-template-columns: 320px 1fr;
+    }
+
+    .product-description-block {
+        grid-column: span 2;
+    }
+}
+
+/* Десктоп (от 1024px): 3 колонки с фиксированно-пропорциональным распределением */
+@media (min-width: 1024px) {
+    .product-title-single {
+        font-size: 30px;
+        margin-bottom: 25px;
+    }
+
+    .product-layout-grid {
+        grid-template-columns: 320px 280px 1fr;
+        gap: 30px;
+    }
+
+    .product-description-block {
+        grid-column: span 1; /* Возвращаем на место в 3-ю колонку */
+    }
 }
