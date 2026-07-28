@@ -113,89 +113,93 @@ window.addToFav = async function (id) {
 
 // ОТОБРАЖЕНИЕ СТРАНИЦЫ ОДНОГО ТОВАРА
 async function renderSingleProductPage() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const productId = parseInt(urlParams.get('id'));
-    if (!productId) return;
+    const params = new URLSearchParams(window.location.search);
+    const productId = parseInt(params.get('id'));
 
-    try {
-        const response = await fetch(`${CORE_API_URL}`);
-        const products = await response.json();
-        const product = products.find(p => p.id === productId);
+    if (!productId) {
+        window.location.href = 'index.html';
+        return;
+    }
 
-        if (!product) return;
+    const products = await loadProducts();
+    const product = products.find(p => p.id === productId);
 
-        const imgSrc = getImageUrl(product.img);
-        const hasDiscount = product.discount > 0;
-        const finalPrice = hasDiscount ? (product.price * (1 - product.discount / 100)).toFixed(2) : product.price.toFixed(2);
+    if (!product) {
+        window.location.href = 'index.html';
+        return;
+    }
 
-        // 1. Заголовок
-        const titleEl = document.getElementById('product-title');
-        if (titleEl) titleEl.textContent = product.title;
+    // 1. Заполняем основные данные текущего товара
+    const mainImg = document.getElementById('main-product-img');
+    const titleEl = document.getElementById('product-title');
+    const priceEl = document.getElementById('product-price');
+    const descEl = document.getElementById('product-desc');
+    const fullDescEl = document.getElementById('product-full-desc');
+    const charList = document.getElementById('product-char-list');
 
-        // 2. Картинка
-        const imgEl = document.getElementById('product-img');
-        if (imgEl) {
-            imgEl.src = imgSrc;
-            imgEl.alt = product.title;
-        }
+    if (mainImg) mainImg.src = getImageUrl(product.img);
+    if (titleEl) titleEl.innerText = product.title;
+    if (descEl) descEl.innerText = product.description || '';
+    if (fullDescEl) fullDescEl.innerText = product.fullDescription || product.description || '';
 
-        // 3. Отображение цены
-        const priceBox = document.getElementById('product-price-box');
-        if (priceBox) {
-            if (hasDiscount) {
-                priceBox.innerHTML = `
-                    <div class="product-price-old">${product.price.toFixed(2)} грн</div>
-                    <div class="show-price price-sale">${finalPrice} грн</div>
+    // Расчет цены со скидкой
+    if (priceEl) {
+        const finalPrice = product.discount > 0 
+            ? (product.price * (1 - product.discount / 100)).toFixed(2) 
+            : product.price.toFixed(2);
+        priceEl.innerText = `${finalPrice} грн`;
+    }
+
+    // Заполнение характеристик
+    if (charList && product.characteristics) {
+        charList.innerHTML = Object.entries(product.characteristics)
+            .map(([key, val]) => `<li><strong>${key}:</strong> ${val}</li>`)
+            .join('');
+    }
+
+    // Настройка кнопок действий
+    const btnCart = document.getElementById('btn-add-cart');
+    const btnFav = document.getElementById('btn-add-fav');
+
+    if (btnCart) btnCart.onclick = () => addToCart(product.id);
+    if (btnFav) btnFav.onclick = () => addToFav(product.id);
+
+    // -------------------------------------------------------------
+    // 2. Логика для рендера «Схожих товарів»
+    // -------------------------------------------------------------
+    const similarGrid = document.getElementById('similar-products-grid');
+    if (similarGrid && product.category) {
+        // Фильтруем товары: та же категория, но исключаем сам открытый товар
+        const similarProducts = products
+            .filter(p => p.category === product.category && p.id !== product.id)
+            .slice(0, 4); // Берем максимум 4 штуки
+
+        if (similarProducts.length > 0) {
+            similarGrid.innerHTML = similarProducts.map(p => {
+                const imgSrc = getImageUrl(p.img);
+                const finalPrice = p.discount > 0 
+                    ? (p.price * (1 - p.discount / 100)).toFixed(2) 
+                    : p.price.toFixed(2);
+
+                return `
+                    <div class="product-card" onclick="location.href='product.html?id=${p.id}'">
+                        <div class="product-img">
+                            <img src="${imgSrc}" alt="${p.title}">
+                        </div>
+                        <div class="product-title">${p.title}</div>
+                        <div class="product-info">
+                            <div class="show-price">${finalPrice} грн</div>
+                        </div>
+                        <div class="product-btn" onclick="event.stopPropagation()">
+                            <button class="btn-fav" onclick="addToFav(${p.id})">В обране</button>
+                            <button class="btn-cart" onclick="addToCart(${p.id})">В кошик</button>
+                        </div>
+                    </div>
                 `;
-            } else {
-                priceBox.innerHTML = `<div class="show-price">${finalPrice} грн</div>`;
-            }
+            }).join('');
+        } else {
+            similarGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #777;">Схожих товарів не знайдено</p>';
         }
-
-        // 4. Описание
-        const descrEl = document.getElementById('product-description-text');
-        if (descrEl) {
-            descrEl.textContent = product.description || "Опис товару відсутній.";
-        }
-
-        // 5. Логика счетчика (+ / -)
-        const qtyInput = document.getElementById('product-qty');
-        const qtyPlus = document.getElementById('qty-plus');
-        const qtyMinus = document.getElementById('qty-minus');
-
-        if (qtyInput && qtyPlus && qtyMinus) {
-            qtyPlus.onclick = () => {
-                let currentVal = parseInt(qtyInput.value) || 1;
-                qtyInput.value = currentVal + 1;
-            };
-
-            qtyMinus.onclick = () => {
-                let currentVal = parseInt(qtyInput.value) || 1;
-                if (currentVal > 1) {
-                    qtyInput.value = currentVal - 1;
-                }
-            };
-        }
-
-        // 6. Обработка кнопок Корзины и Избранного
-        const cartBtn = document.getElementById('cart-btn');
-        const favBtn = document.getElementById('fav-btn');
-
-        if (cartBtn) {
-            cartBtn.onclick = () => {
-                const qty = qtyInput ? parseInt(qtyInput.value) || 1 : 1;
-                for (let i = 0; i < qty; i++) {
-                    addToCart(product.id);
-                }
-            };
-        }
-
-        if (favBtn) {
-            favBtn.onclick = () => addToFav(product.id);
-        }
-
-    } catch (e) {
-        console.error("Помилка завантаження сторінки товару", e);
     }
 }
 
