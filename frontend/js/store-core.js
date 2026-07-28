@@ -114,14 +114,14 @@ window.addToFav = async function (id) {
 // ОТОБРАЖЕНИЕ СТРАНИЦЫ ОДНОГО ТОВАРА
 async function renderSingleProductPage() {
     const urlParams = new URLSearchParams(window.location.search);
-    const productId = parseInt(urlParams.get('id'));
-    if (!productId) return;
+    const rawId = urlParams.get('id');
+    if (!rawId) return;
 
     try {
         const response = await fetch(`${CORE_API_URL}`);
         const products = await response.json();
-        const product = products.find(p => p.id === productId);
 
+        const product = products.find(p => String(p.id) === String(rawId));
         if (!product) return;
 
         const imgSrc = getImageUrl(product.img);
@@ -195,37 +195,74 @@ async function renderSingleProductPage() {
         }
 
         // -------------------------------------------------------------
-        // 2. Логика для рендера «Схожих товарів»
+        // 7. СТРОГИЙ отбор похожих товаров ТОЛЬКО по ПОДКАТЕГОРИИ
         // -------------------------------------------------------------
         const similarGrid = document.getElementById('similar-products-grid');
-        if (similarGrid && product.category) {
-            // Фильтруем товары: та же категория, но исключаем сам открытый товар
-            const similarProducts = products
-                .filter(p => p.category === product.category && p.id !== product.id)
-                .slice(0, 4); // Берем максимум 4 штуки
+        if (similarGrid) {
+            const getCategoriesArray = (item) => {
+                if (!item || !item.category) return [];
+                if (Array.isArray(item.category)) {
+                    return item.category.map(c => String(c).trim().toLowerCase());
+                }
+                return [String(item.category).trim().toLowerCase()];
+            };
 
+            const currentCats = getCategoriesArray(product);
+            let similarProducts = [];
+
+            if (currentCats.length > 0) {
+                // Если элементов несколько, последний в массиве — это обычно подкатегория
+                // Если элемент один — ищем прямо по нему
+                const targetSubcategory = currentCats.length > 1 ? currentCats[currentCats.length - 1] : currentCats[0];
+
+                similarProducts = products.filter(p => {
+                    // Исключаем сам текущий товар
+                    if (String(p.id) === String(product.id)) return false;
+
+                    const pCats = getCategoriesArray(p);
+
+                    // Проверяем, содержат ли категории другого товара ИМЕННО эту подкатегорию
+                    return pCats.includes(targetSubcategory);
+                }).slice(0, 4); // Берем максимум 4 штуки
+            }
+
+            // Отрисовка с ПОЛНОЙ версткой карточек (как в catalog.js)
             if (similarProducts.length > 0) {
                 similarGrid.innerHTML = similarProducts.map(p => {
                     const imgSrc = getImageUrl(p.img);
-                    const finalPrice = p.discount > 0
+                    const hasDiscount = p.discount > 0;
+                    const finalPrice = hasDiscount
                         ? (p.price * (1 - p.discount / 100)).toFixed(2)
-                        : p.price.toFixed(2);
+                        : Number(p.price).toFixed(2);
+
+                    let badgeHTML = '';
+                    if (hasDiscount) {
+                        badgeHTML = `<div class="badge badge-sale">-${p.discount}%</div>`;
+                    } else if (p.isNew) {
+                        badgeHTML = `<div class="badge badge-new">NEW</div>`;
+                    }
+
+                    let priceHTML = hasDiscount ? `
+                        <div class="product-price-old">${Number(p.price).toFixed(2)} грн</div>
+                        <div class="product-price price-sale">${finalPrice} грн</div>
+                    ` : `<div class="product-price">${finalPrice} грн</div>`;
 
                     return `
-                    <div class="product-card" onclick="location.href='product.html?id=${p.id}'">
-                        <div class="product-img">
-                            <img src="${imgSrc}" alt="${p.title}">
+                        <div class="similar-cart" style="position: relative;" onclick="location.href='product.html?id=${p.id}'">
+                            <div class="product-img">
+                                ${badgeHTML}
+                                <img src="${imgSrc}" alt="${p.title}">
+                            </div>
+                            <div class="product-info">
+                                <div class="product-title">${p.title}</div>
+                                <div class="product-price-block">${priceHTML}</div>
+                            </div>
+                            <div class="product-btn" onclick="event.stopPropagation()">
+                                <button class="btn-fav" onclick="addToFav(${p.id})">В обране</button>
+                                <button class="btn-cart" onclick="addToCart(${p.id})">В кошик</button>
+                            </div>
                         </div>
-                        <div class="product-title">${p.title}</div>
-                        <div class="product-info">
-                            <div class="show-price">${finalPrice} грн</div>
-                        </div>
-                        <div class="product-btn" onclick="event.stopPropagation()">
-                            <button class="btn-fav" onclick="addToFav(${p.id})">В обране</button>
-                            <button class="btn-cart" onclick="addToCart(${p.id})">В кошик</button>
-                        </div>
-                    </div>
-                `;
+                    `;
                 }).join('');
             } else {
                 similarGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #777;">Схожих товарів не знайдено</p>';
