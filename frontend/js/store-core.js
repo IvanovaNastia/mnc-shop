@@ -216,8 +216,8 @@ function renderCartPage() {
 
     cartMenu.innerHTML = cart.map(item => {
         const imgSrc = getImageUrl(item.img);
-
         const finalPrice = item.discount > 0 ? (item.price * (1 - item.discount / 100)) : item.price;
+        
         return `
             <div class="cart-card" onclick="goToProduct(${item.id})">
                 <div class="cart-info">
@@ -226,7 +226,14 @@ function renderCartPage() {
                     </div>
                     <div class="cart-text">
                         <h2 class="text-title">${item.title}</h2>
-                        <div class="text-price">${(finalPrice * item.quantity).toFixed(2)} грн (${item.quantity} шт.)</div>
+                        <div class="text-price">${(finalPrice * item.quantity).toFixed(2)} грн</div>
+                        
+                        <!-- Счетчик количества -->
+                        <div class="cart-qty-counter" onclick="event.stopPropagation()">
+                            <button class="cart-qty-btn" onclick="changeCartQty(${item.id}, -1)">−</button>
+                            <input type="number" class="cart-qty-input" value="${item.quantity}" readonly>
+                            <button class="cart-qty-btn" onclick="changeCartQty(${item.id}, 1)">+</button>
+                        </div>
                     </div>
                 </div>
                 <div class="cart-del">
@@ -252,8 +259,8 @@ function renderCartPage() {
             <div class="aside-container">
                 <h2 class="aside-title">Підсумок замовлення</h2>
                 <div class="aside-info">
-                    <div>Товари</div>
-                    <div>${totalItems}</div>
+                    <div>Товари (${totalItems} шт.)</div>
+                    <div>${totalPrice.toFixed(2)} грн</div>
                 </div>
                 <div class="aside-pay">
                     <div>До оплати</div>
@@ -266,6 +273,24 @@ function renderCartPage() {
         `;
     }
 }
+
+// Изменение количества товара в корзине (+ / -)
+window.changeCartQty = function (id, delta) {
+    const item = cart.find(product => product.id === id);
+    if (!item) return;
+
+    item.quantity = (item.quantity || 1) + delta;
+
+    // Если количество стало <= 0, удаляем товар из корзины
+    if (item.quantity <= 0) {
+        removeFromCart(id);
+        return;
+    }
+
+    localStorage.setItem('shop_cart', JSON.stringify(cart));
+    renderCartPage();
+    updateHeaderCounters();
+};
 
 window.removeFromCart = function (id) {
     cart = cart.filter(item => item.id !== id);

@@ -1047,6 +1047,60 @@ body {
     height: auto;
 }
 
+/* Компактный счётчик в корзине */
+.cart-qty-counter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 10px;
+    background: #f4f4f4;
+    border-radius: 8px;
+    padding: 4px 8px;
+    width: fit-content;
+}
+
+.cart-qty-btn {
+    background: transparent;
+    border: none;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+    padding: 0;
+    line-height: 1;
+    transition: opacity 0.2s;
+}
+
+.cart-qty-btn:hover {
+    opacity: 0.7;
+}
+
+.cart-qty-input {
+    width: 32px;
+    text-align: center;
+    border: none;
+    background: transparent;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    padding: 0;
+    margin: 0;
+    outline: none;
+}
+
+/* Убираем стрелочки у инпута на Webkit/Chrome */
+.cart-qty-input::-webkit-outer-spin-button,
+.cart-qty-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
 .aside-container {
     border: 2px solid #000000;
     border-radius: 10px;
